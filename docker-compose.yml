@@ -1,0 +1,22 @@
+version: '2'
+services:
+  api:
+    build:
+      dockerfile: docker/FalconDockerfile
+      context: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/usr/src/app
+    environment:
+      - FALCON_SETTINGS_MODULE=history.settings.docker
+
+    links:
+
+      - mongodb
+
+  mongodb:
+    image: mongo
+    ports:
+      - "47017:27017"
+
