@@ -10,13 +10,10 @@ import falcon
 from history.sample.models import *
 
 
-# Create resources
-device_history = DeviceHistory()
-
-
 # Create falcon app
 app = falcon.API(middleware=[AuthMiddleware()])
-app.add_route('/device/{device_id}/history', device_history)
+app.add_route('/device/{device_id}/history', DeviceHistory())
+app.add_route('/STH/v1/contextEntities/type/{device_type}/id/{device_id}/attributes/{attr}', STHHistory())
 
 
 # Useful for debugging problems in API, it works with pdb

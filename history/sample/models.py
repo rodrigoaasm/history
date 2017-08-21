@@ -2,18 +2,19 @@
 """
 Exposes device information using dojot's modelling
 """
-# System imports
 import json
 import base64
 import logging
-# Third-party imports
 import falcon
 import pymongo
-
-# Local imports
 from history import settings
 
 class AuthMiddleware(object):
+    """
+        Middleware used to populate context with relevant JWT-sourced information.
+        Also used to validate and refuse requests that do not contain valid tokens associated
+        with them.
+    """
 
     def __init__(self):
         self.logger = logging.getLogger('history.' + __name__)
@@ -65,36 +66,43 @@ class AuthMiddleware(object):
             self.logger.error(exception)
             return None
 
-class DeviceHistory(object):
-    """Service used to retrieve a given device historical data"""
+
+class HistoryUtil(object):
 
     @staticmethod
     def get_db():
+        # TODO should come from conf, not method
         return settings.MONGO_DB['device_history']
 
     @staticmethod
     def get_collection(service, device_id):
-        db = DeviceHistory.get_db()
+        db = HistoryUtil.get_db()
         collection_name = "%s_%s" % (service, device_id)
         if collection_name in db.collection_names():
             return db["%s_%s" % (service, device_id)]
         else:
-            raise falcon.HTTPNotFound(title="Device not found", description="No data for the given device could be found")
+            raise falcon.HTTPNotFound(title="Device not found",
+                                      description="No data for the given device could be found")
 
     @staticmethod
-    def check_mandatory_query_param(params, field, ftype=str):
+    def check_mandatory_query_param(params, field, ftype=None):
         if (field not in params.keys()) or (len(params[field]) == 0):
             raise falcon.HTTPMissingParam(field)
 
-        if type(params[field]) is not ftype:
-            raise falcon.HTTPInvalidParam('%s must be of type %s' % (field, ftype.__name__), field)
+        if ftype is not None:
+            if not ftype(params[field]):
+                print("failed to validate field %s %s" % (field, params[field]))
+                raise falcon.HTTPInvalidParam('%s must be of type %s' % (field, ftype.__name__), field)
+
+class DeviceHistory(object):
+    """Service used to retrieve a given device historical data"""
 
     @staticmethod
     def on_get(req, resp, device_id):
-        DeviceHistory.check_mandatory_query_param(req.params, 'lastN', int)
-        DeviceHistory.check_mandatory_query_param(req.params, 'attr')
+        HistoryUtil.check_mandatory_query_param(req.params, 'lastN', int)
+        HistoryUtil.check_mandatory_query_param(req.params, 'attr')
 
-        collection = DeviceHistory.get_collection(req.context['related_service'], device_id)
+        collection = HistoryUtil.get_collection(req.context['related_service'], device_id)
         ls_filter = {"_id" : False, '@timestamp': False, '@version': False}
         sort = [('ts', pymongo.DESCENDING)]
         query = {'attr': req.params['attr']}
@@ -109,3 +117,50 @@ class DeviceHistory(object):
 
         resp.status = falcon.HTTP_200
         resp.body = json.dumps(history)
+
+class STHHistory(object):
+    """ Deprecated: implements STH's NGSI-like historical view of data """
+
+    @staticmethod
+    def on_get(req, resp, device_type, device_id, attr):
+        HistoryUtil.check_mandatory_query_param(req.params, 'lastN', int)
+
+        collection = HistoryUtil.get_collection(req.context['related_service'], device_id)
+        ls_filter = {"_id" : False, '@timestamp': False, '@version': False}
+        sort = [('ts', pymongo.DESCENDING)]
+        query = {'attr': attr, 'value': {'$ne': ' '}}
+        limit_val = int(req.params['lastN'])
+        cursor = collection.find(query, ls_filter, sort=sort, limit=limit_val)
+
+        history = []
+
+        if cursor.count() > 0:
+            print cursor[0]
+            device_type = cursor[0]['device_type']
+
+        for d in cursor:
+            history.append({
+                "attrType": d['type'],
+                "attrValue": d['value'],
+                "recvTime": d['ts']
+            })
+
+        ngsi_body = {
+            "contextResponses": [
+                {
+                    "contextElement": {
+                        "attributes": [{
+                            "name": attr,
+                            "values": history
+                        }],
+                        "id": device_id,
+                        "isPattern": False,
+                        "type": device_type
+                    },
+                    "statusCode": {"code": "200", "reasonPhrase": "OK"}
+                }
+            ]
+        }
+
+        resp.status = falcon.HTTP_200
+        resp.body = json.dumps(ngsi_body)
