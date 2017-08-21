@@ -139,7 +139,7 @@ class STHHistory(object):
             device_type = cursor[0]['device_type']
 
         for d in cursor:
-            history.append({
+            history.insert(0, {
                 "attrType": d['type'],
                 "attrValue": d['value'],
                 "recvTime": d['ts']
