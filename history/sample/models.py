@@ -97,6 +97,18 @@ class HistoryUtil(object):
 class DeviceHistory(object):
     """Service used to retrieve a given device historical data"""
 
+    logger = logging.getLogger('history.' + __name__)
+    logger.addHandler(logging.StreamHandler())
+    logger.setLevel(logging.DEBUG)
+
+    @staticmethod
+    def get_single_attr(collection, query, ls_filter, sort, limit):
+        cursor = collection.find(query, ls_filter, sort=sort, limit=limit)
+        history = []
+        for d in cursor:
+            history.append(d)
+        return history
+
     @staticmethod
     def on_get(req, resp, device_id):
         HistoryUtil.check_mandatory_query_param(req.params, 'lastN', int)
@@ -105,15 +117,19 @@ class DeviceHistory(object):
         collection = HistoryUtil.get_collection(req.context['related_service'], device_id)
         ls_filter = {"_id" : False, '@timestamp': False, '@version': False}
         sort = [('ts', pymongo.DESCENDING)]
-        query = {'attr': req.params['attr']}
         limit_val = int(req.params['lastN'])
-        cursor = collection.find(query, ls_filter, sort=sort, limit=limit_val)
-        history = []
-        for d in cursor:
-            history.append(d)
 
-        if len(history) == 0:
-            raise falcon.HTTPNotFound(title="Attr not found", description="No data for the given attribute could be found")
+        if isinstance(req.params['attr'], list):
+            DeviceHistory.logger.info('got list of attrs')
+            history = {}
+            for attr in req.params['attr']:
+                history[attr] = DeviceHistory.get_single_attr(
+                    collection, {'attr': attr}, ls_filter, sort, limit_val)
+        else:
+            history = DeviceHistory.get_single_attr(
+                collection, {'attr': req.params['attr']}, ls_filter, sort, limit_val)
+            if len(history) == 0:
+                raise falcon.HTTPNotFound(title="Attr not found", description="No data for the given attribute could be found")
 
         resp.status = falcon.HTTP_200
         resp.body = json.dumps(history)
@@ -123,13 +139,20 @@ class STHHistory(object):
 
     @staticmethod
     def on_get(req, resp, device_type, device_id, attr):
-        HistoryUtil.check_mandatory_query_param(req.params, 'lastN', int)
+        # HistoryUtil.check_mandatory_query_param(req.params, 'lastN', int)
 
         collection = HistoryUtil.get_collection(req.context['related_service'], device_id)
         ls_filter = {"_id" : False, '@timestamp': False, '@version': False}
         sort = [('ts', pymongo.DESCENDING)]
         query = {'attr': attr, 'value': {'$ne': ' '}}
-        limit_val = int(req.params['lastN'])
+
+        if 'lastN' in req.params.keys():
+            limit_val = int(req.params['lastN'])
+        elif 'hLimit' in req.params.keys():
+            limit_val = int(req.params['hLimit'])
+        else:
+            raise falcon.HTTPInvalidParam('hLimit or lastN  must be provided')
+
         cursor = collection.find(query, ls_filter, sort=sort, limit=limit_val)
 
         history = []
