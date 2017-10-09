@@ -71,7 +71,6 @@ class HistoryUtil(object):
 
     @staticmethod
     def get_db():
-        # TODO should come from conf, not method
         return settings.MONGO_DB['device_history']
 
     @staticmethod
@@ -91,8 +90,8 @@ class HistoryUtil(object):
 
         if ftype is not None:
             if not ftype(params[field]):
-                print("failed to validate field %s %s" % (field, params[field]))
-                raise falcon.HTTPInvalidParam('%s must be of type %s' % (field, ftype.__name__), field)
+                raise falcon.HTTPInvalidParam(
+                    '%s must be of type %s' % (field, ftype.__name__), field)
 
 class DeviceHistory(object):
     """Service used to retrieve a given device historical data"""
@@ -102,8 +101,33 @@ class DeviceHistory(object):
     logger.setLevel(logging.DEBUG)
 
     @staticmethod
-    def get_single_attr(collection, query, ls_filter, sort, limit):
-        cursor = collection.find(query, ls_filter, sort=sort, limit=limit)
+    def parse_request(request, attr):
+        """ returns mongo compatible query object, based on the query params provided """
+
+        if 'lastN' in request.params.keys():
+            limit_val = int(request.params['lastN'])
+        elif 'hLimit' in request.params.keys():
+            limit_val = int(request.params['hLimit'])
+        else:
+            raise falcon.HTTPInvalidParam('hLimit or lastN  must be provided')
+
+        query = {'attr': attr, 'value': {'$ne': ' '}}
+        ts_filter = {}
+        if 'dateFrom' in request.params.keys():
+            ts_filter['$gte'] = request.params['dateFrom']
+        if 'dateTo' in request.params.keys():
+            ts_filter['$lte'] = request.params['dateTo']
+        if len(ts_filter.keys()) > 0:
+            query['ts'] = ts_filter
+
+        ls_filter = {"_id" : False, '@timestamp': False, '@version': False}
+        sort = [('ts', pymongo.DESCENDING)]
+
+        return {'query': query, 'limit': limit_val, 'filter': ls_filter, 'sort': sort}
+
+    @staticmethod
+    def get_single_attr(collection, query):
+        cursor = collection.find(query['query'], query['filter'], query['sort'], query['limit'])
         history = []
         for d in cursor:
             history.append(d)
@@ -111,25 +135,22 @@ class DeviceHistory(object):
 
     @staticmethod
     def on_get(req, resp, device_id):
-        HistoryUtil.check_mandatory_query_param(req.params, 'lastN', int)
         HistoryUtil.check_mandatory_query_param(req.params, 'attr')
 
         collection = HistoryUtil.get_collection(req.context['related_service'], device_id)
-        ls_filter = {"_id" : False, '@timestamp': False, '@version': False}
-        sort = [('ts', pymongo.DESCENDING)]
-        limit_val = int(req.params['lastN'])
 
         if isinstance(req.params['attr'], list):
             DeviceHistory.logger.info('got list of attrs')
             history = {}
             for attr in req.params['attr']:
-                history[attr] = DeviceHistory.get_single_attr(
-                    collection, {'attr': attr}, ls_filter, sort, limit_val)
+                query = DeviceHistory.parse_request(req, attr)
+                history[attr] = DeviceHistory.get_single_attr(collection, query)
         else:
             history = DeviceHistory.get_single_attr(
-                collection, {'attr': req.params['attr']}, ls_filter, sort, limit_val)
+                collection, DeviceHistory.parse_request(req, req.params['attr']))
             if len(history) == 0:
-                raise falcon.HTTPNotFound(title="Attr not found", description="No data for the given attribute could be found")
+                msg = "No data for the given attribute could be found"
+                raise falcon.HTTPNotFound(title="Attr not found", description=msg)
 
         resp.status = falcon.HTTP_200
         resp.body = json.dumps(history)
@@ -139,28 +160,13 @@ class STHHistory(object):
 
     @staticmethod
     def on_get(req, resp, device_type, device_id, attr):
-        # HistoryUtil.check_mandatory_query_param(req.params, 'lastN', int)
-
         collection = HistoryUtil.get_collection(req.context['related_service'], device_id)
-        ls_filter = {"_id" : False, '@timestamp': False, '@version': False}
-        sort = [('ts', pymongo.DESCENDING)]
-        query = {'attr': attr, 'value': {'$ne': ' '}}
 
-        if 'lastN' in req.params.keys():
-            limit_val = int(req.params['lastN'])
-        elif 'hLimit' in req.params.keys():
-            limit_val = int(req.params['hLimit'])
-        else:
-            raise falcon.HTTPInvalidParam('hLimit or lastN  must be provided')
-
-        cursor = collection.find(query, ls_filter, sort=sort, limit=limit_val)
-
+        query = DeviceHistory.parse_request(req, attr)
+        cursor = collection.find(query['query'], query['filter'], query['sort'], query['limit'])
         history = []
-
         if cursor.count() > 0:
-            print cursor[0]
             device_type = cursor[0]['device_type']
-
         for d in cursor:
             history.insert(0, {
                 "attrType": d['type'],
