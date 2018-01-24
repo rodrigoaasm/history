@@ -127,7 +127,10 @@ class DeviceHistory(object):
 
     @staticmethod
     def get_single_attr(collection, query):
-        cursor = collection.find(query['query'], query['filter'], query['sort'], query['limit'])
+        cursor = collection.find(query['query'],
+                                 query['filter'],
+                                 sort=query['sort'],
+                                 limit=query['limit'])
         history = []
         for d in cursor:
             history.append(d)
@@ -163,7 +166,10 @@ class STHHistory(object):
         collection = HistoryUtil.get_collection(req.context['related_service'], device_id)
 
         query = DeviceHistory.parse_request(req, attr)
-        cursor = collection.find(query['query'], query['filter'], query['sort'], query['limit'])
+        cursor = collection.find(query['query'],
+                                 query['filter'],
+                                 sort=query['sort'],
+                                 limit=query['limit'])
         history = []
         if cursor.count() > 0:
             device_type = cursor[0]['device_type']
