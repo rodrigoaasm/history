@@ -4,7 +4,7 @@ script:
   - npm run build
 install:
   - docker build -t local/history -f docker/history.docker .
-  - docker build -t local/persister -f docker/persistence.docker .
+  - docker build -t local/persister -f docker/persister.docker .
 services:
   - docker
 after_success:
