@@ -72,7 +72,7 @@ class AuthMiddleware(object):
 
 class HistoryUtil(object):
 
-    db = pymongo.MongoClient(settings.MONGO_DB, replicaSet=settings.replica_set)
+    db = pymongo.MongoClient(settings.MONGO_DB, replicaSet=settings.REPLICA_SET)
 
     @staticmethod
     def get_db():

@@ -16,6 +16,10 @@ LOGGER = logging.getLogger('history.' + __name__)
 LOGGER.addHandler(logging.StreamHandler())
 LOGGER.setLevel(logging.INFO)
 
+class ConfigurationError(Exception):
+    pass
+
+
 class KafkaEventHandler(object):
     """
         Base callback structure for kafka events callbacks
@@ -35,9 +39,6 @@ class TenancyHandler(KafkaEventHandler):
     @staticmethod
     def _spawn_watcher(service, subject, handler):
         topic = get_topic(service, subject)
-        if topic is None:
-            # TODO how to handle?
-            return
         watcher = KafkaListener(topic, handler)
         watcher.start()
         return watcher
@@ -86,7 +87,7 @@ class DeviceHandler(KafkaEventHandler):
         LOGGER.debug('got device event %s', message)
 
         if self.db is None:
-            self.db = pymongo.MongoClient(settings.MONGO_DB, replicaSet=settings.replica_set)
+            self.db = pymongo.MongoClient(settings.MONGO_DB, replicaSet=settings.REPLICA_SET)
             self.db = self.db['device_history']
 
         collection_name = "{}_{}".format(data['meta']['service'], data['data']['id'])
@@ -103,7 +104,7 @@ class DataHandler(KafkaEventHandler):
 
     def _get_collection(self, message):
         if self.db is None:
-            self.db = pymongo.MongoClient(settings.MONGO_DB, replicaSet=settings.replica_set)
+            self.db = pymongo.MongoClient(settings.MONGO_DB, replicaSet=settings.REPLICA_SET)
         collection_name = "{}_{}".format(self.service, message['metadata']['deviceid'])
         return self.db['device_history'][collection_name]
 
@@ -204,9 +205,11 @@ def _get_token(service):
 def get_topic(service, subject, global_subject=False):
     """
         Given a service and a subject, retrieve its associated kakfa topic
-        :param service          Service (tenancy context) whoose subject topic is to be retrieved
-        :param subject          Subject that is to be retrieved
-        :param global_subject   Whether the subject is not attached to any specific tenant
+        :param  service             Service (tenancy context) whoose subject topic is to be
+                                    retrieved
+        :param  subject             Subject that is to be retrieved
+        :param  global_subject      Whether the subject is not attached to any specific tenant
+        :raises ConfigurationError  If broker could not be reached
     """
     start = time.time()
     opts = "?global=true" if global_subject else ""
@@ -218,8 +221,8 @@ def get_topic(service, subject, global_subject=False):
         LOGGER.debug('topic acquisition took %s [%s]', time.time() - start, payload['topic'])
         return payload['topic']
 
-    LOGGER.error("Topic retrieval error: %d %s", response.status_code, response.reason)
-    return None
+    raise ConfigurationError("Topic retrieval error: {} {}".format(response.status_code,
+                                                                   response.reason))
 
 if __name__ == '__main__':
     # Spawns tenancy management thread

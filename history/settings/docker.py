@@ -9,7 +9,7 @@ import os
 from history.settings.base import *
 
 MONGO_DB = os.environ.get('MONGO_DB', 'mongodb')
-replica_set = os.environ.get('MONGO_REPLICA_SET', None)
+REPLICA_SET = os.environ.get('MONGO_REPLICA_SET', None)
 
 DATA_EXP = int(os.environ.get('DATA_EXP', '604800'))
 

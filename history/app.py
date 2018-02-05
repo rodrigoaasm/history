@@ -4,18 +4,12 @@
 App runner
 """
 # System imports
-import logging
-
 # Third-party imports
 import falcon
 
 # Local imports
 from history import settings
 from history.api.models import DeviceHistory, STHHistory, AuthMiddleware
-
-LOGGER = logging.getLogger('history.' + __name__)
-LOGGER.addHandler(logging.StreamHandler())
-LOGGER.setLevel(logging.DEBUG)
 
 # Create falcon app
 app = falcon.API(middleware=[AuthMiddleware()])
