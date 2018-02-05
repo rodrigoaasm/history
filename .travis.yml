@@ -1,8 +1,7 @@
 sudo: false
 language: python
+
 script:
-  - npm run build
-install:
   - docker build -t local/history -f docker/history.docker .
   - docker build -t local/persister -f docker/persister.docker .
 services:
