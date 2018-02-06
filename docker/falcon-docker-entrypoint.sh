@@ -9,7 +9,6 @@ if [ $1 = 'start' ]; then
             echo Executed $retries retries, aborting
             exit 1
         fi
-        sleep $sleep_time
         exec gunicorn history.app:app \
                   --bind 0.0.0.0:8000 \
                   --reload -R \
@@ -23,5 +22,6 @@ if [ $1 = 'start' ]; then
             echo "Cannot start application, retying in $sleep_time seconds..."
             let retries++
         fi
+        sleep $sleep_time
     done
 fi

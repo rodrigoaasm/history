@@ -5,8 +5,11 @@ Exposes device information using dojot's modelling
 import json
 import base64
 import logging
+
+import dateutil.parser
 import falcon
 import pymongo
+
 from history import settings
 
 class AuthMiddleware(object):
@@ -69,9 +72,11 @@ class AuthMiddleware(object):
 
 class HistoryUtil(object):
 
+    db = pymongo.MongoClient(settings.MONGO_DB, replicaSet=settings.REPLICA_SET)
+
     @staticmethod
     def get_db():
-        return settings.MONGO_DB['device_history']
+        return HistoryUtil.db['device_history']
 
     @staticmethod
     def get_collection(service, device_id):
@@ -109,14 +114,14 @@ class DeviceHistory(object):
         elif 'hLimit' in request.params.keys():
             limit_val = int(request.params['hLimit'])
         else:
-            raise falcon.HTTPInvalidParam('hLimit or lastN  must be provided')
+            raise falcon.HTTPMissingParam('lastN')
 
         query = {'attr': attr, 'value': {'$ne': ' '}}
         ts_filter = {}
         if 'dateFrom' in request.params.keys():
-            ts_filter['$gte'] = request.params['dateFrom']
+            ts_filter['$gte'] = dateutil.parser.parse(request.params['dateFrom'])
         if 'dateTo' in request.params.keys():
-            ts_filter['$lte'] = request.params['dateTo']
+            ts_filter['$lte'] = dateutil.parser.parse(request.params['dateTo'])
         if len(ts_filter.keys()) > 0:
             query['ts'] = ts_filter
 
@@ -133,6 +138,8 @@ class DeviceHistory(object):
                                  limit=query['limit'])
         history = []
         for d in cursor:
+            entry = d
+            entry['ts'] = d['ts'].isoformat() + 'Z'
             history.append(d)
         return history
 
@@ -177,7 +184,7 @@ class STHHistory(object):
             history.insert(0, {
                 "attrType": d['type'],
                 "attrValue": d['value'],
-                "recvTime": d['ts']
+                "recvTime": d['ts'].isoformat() + 'Z'
             })
 
         ngsi_body = {

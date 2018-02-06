@@ -1,0 +1,10 @@
+sudo: false
+language: python
+
+script:
+  - docker build -t local/history -f docker/history.docker .
+  - docker build -t local/persister -f docker/persister.docker .
+services:
+  - docker
+after_success:
+  - travis/publish.sh

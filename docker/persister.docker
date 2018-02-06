@@ -1,0 +1,11 @@
+FROM python:2.7
+
+RUN pip install cython
+
+RUN mkdir -p /usr/src/app/requirements
+WORKDIR /usr/src/app
+
+ADD . /usr/src/app
+RUN ["python", "setup.py", "develop"]
+
+CMD ["python", "history/subscriber/kafkaSubscriber.py"]

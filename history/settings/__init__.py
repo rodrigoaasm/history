@@ -17,4 +17,3 @@ except AttributeError:
     to_import = [name for name in my_module_dict if not name.startswith('_')]
 
 globals().update({name: my_module_dict[name] for name in to_import})
-

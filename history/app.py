@@ -1,3 +1,4 @@
+#!/usr/local/bin/python
 # -*- coding: utf-8 -*-
 """
 App runner
@@ -7,14 +8,13 @@ App runner
 import falcon
 
 # Local imports
-from history.sample.models import *
-
+from history import settings
+from history.api.models import DeviceHistory, STHHistory, AuthMiddleware
 
 # Create falcon app
 app = falcon.API(middleware=[AuthMiddleware()])
 app.add_route('/device/{device_id}/history', DeviceHistory())
 app.add_route('/STH/v1/contextEntities/type/{device_type}/id/{device_id}/attributes/{attr}', STHHistory())
-
 
 # Useful for debugging problems in API, it works with pdb
 if __name__ == '__main__':
