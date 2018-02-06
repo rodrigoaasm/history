@@ -178,11 +178,9 @@ class STHHistory(object):
                                  sort=query['sort'],
                                  limit=query['limit'])
         history = []
-        if cursor.count() > 0:
-            device_type = cursor[0]['device_type']
         for d in cursor:
             history.insert(0, {
-                "attrType": d['type'],
+                "attrType": device_type,
                 "attrValue": d['value'],
                 "recvTime": d['ts'].isoformat() + 'Z'
             })
