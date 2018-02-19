@@ -150,7 +150,7 @@ class DataHandler(KafkaEventHandler):
             except Exception as error:
                 LOGGER.warn('Failed to persist received information.\n%s', error)
         else:
-            LOGGER.info('Got empty event from device [%s] - ignoring', data['metadata']['deviceid'])
+            LOGGER.info('Got empty event from device [%s] - ignoring', device_id)
 
 
 class KafkaListener(Process):
