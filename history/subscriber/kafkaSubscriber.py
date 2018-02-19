@@ -113,29 +113,44 @@ class DataHandler(KafkaEventHandler):
             Given a device data event, persist it to mongo
             :param message A device data event
         """
-        data = json.loads(message)
+        data = None
+        try:
+            data = json.loads(message)
+        except Exception as error:
+            LOGGER.error('Received event is not valid JSON. Ignoring\n%s', error)
+            return
+
         LOGGER.debug('got data event %s', message)
 
-        timestamp = None
-        try:
-            # TODO document timestamp format across channels within dojot
-            timestamp = data['metadata']['timestamp']
-        except Exception:
-            timestamp = datetime.utcnow()
+        metadata = data.get('metadata', None)
+        if metadata is None:
+            LOGGER.error('Received event has no metadata associated with it. Ignoring')
+            return
+        device_id = metadata.get('deviceid', None)
+        if device_id is None:
+            LOGGER.error('Received event cannot be traced to a valid device. Ignoring')
+            return
 
+        timestamp = metadata.get('timestamp', datetime.utcnow())
         docs = []
         for attr in data['attrs'].keys():
             entry = {}
             entry['attr'] = attr
             entry['value'] = data['attrs'][attr]
-            entry['device_id'] = data['metadata']['deviceid']
+            entry['device_id'] = device_id
             entry['ts'] = timestamp
             # Should we store value type too? it is not sent by agents anymore
             # Should we store template information too? it is not sent by agents anymore
             docs.append(entry)
 
-        db = self._get_collection(data)
-        db.insert_many(docs)
+        if len(docs) > 0:
+            try:
+                mongo = self._get_collection(data)
+                mongo.insert_many(docs)
+            except Exception as error:
+                LOGGER.warn('Failed to persist received information.\n%s', error)
+        else:
+            LOGGER.info('Got empty event from device [%s] - ignoring', device_id)
 
 
 class KafkaListener(Process):
@@ -183,7 +198,11 @@ class KafkaListener(Process):
         for message in self.consumer:
             start = time.time()
             LOGGER.debug("Got kafka event [%s] %s", self.topic, message)
-            self.callback.handle_event(message.value)
+            try:
+                self.callback.handle_event(message.value)
+            except Exception as error:
+                LOGGER.warn('Data handler raised an unknown exception. Ignoring. \n%s', error)
+
             LOGGER.debug('done %s', time.time() - start)
 
 
@@ -226,14 +245,13 @@ def get_topic(service, subject, global_subject=False):
 
 if __name__ == '__main__':
     # Spawns tenancy management thread
-    tenancyTopic = get_topic('internal', settings.TENANCY_SUBJECT, True)
-    if tenancyTopic is None:
-        LOGGER.error("Failed to obtain tenancy lifecyle topic")
+    try:
+        tenancy_topic = get_topic('internal', settings.TENANCY_SUBJECT, True)
+        handler = TenancyHandler()
+        tenant_watcher = KafkaListener(tenancy_topic, handler)
+        tenant_watcher.start()
+        handler.tenants_bootstrap()
+        tenant_watcher.join()
+    except Exception as error:
+        LOGGER.error("Failed to bootstrap tenants's consumers.\n%s", error)
         exit(1)
-    handler = TenancyHandler()
-    tenantWatcher = KafkaListener(tenancyTopic, handler)
-    tenantWatcher.start()
-    handler.tenants_bootstrap()
-    tenantWatcher.join()
-
-    # TODO bootstrap with previously existing tenants
