@@ -3,7 +3,7 @@ import logging
 import json
 import time
 from datetime import datetime
-from multiprocessing import Process
+from multiprocessing import Process, active_children
 
 import requests
 from kafka import KafkaConsumer
@@ -39,7 +39,7 @@ class TenancyHandler(KafkaEventHandler):
     @staticmethod
     def _spawn_watcher(service, subject, handler):
         topic = get_topic(service, subject)
-        watcher = KafkaListener(topic, handler)
+        watcher = KafkaListener(topic, handler, name=(subject + "-watcher"))
         watcher.start()
         return watcher
 
@@ -158,13 +158,13 @@ class KafkaListener(Process):
         Threaded abstraction for a kafka consumer
     """
 
-    def __init__(self, topic, callback):
+    def __init__(self, topic, callback, name=None):
         """
             Constructor.
             :param callback Who to call when a new message arrives. Must be an instance of
                             KafkaEventHandler
         """
-        Process.__init__(self)
+        Process.__init__(self, name=name)
 
         self.topic = topic
         self.broker = [settings.KAFKA_HOST]
@@ -248,10 +248,15 @@ if __name__ == '__main__':
     try:
         tenancy_topic = get_topic('internal', settings.TENANCY_SUBJECT, True)
         handler = TenancyHandler()
-        tenant_watcher = KafkaListener(tenancy_topic, handler)
+        tenant_watcher = KafkaListener(tenancy_topic, handler, name="tenancy-watcher")
         tenant_watcher.start()
         handler.tenants_bootstrap()
         tenant_watcher.join()
     except Exception as error:
-        LOGGER.error("Failed to bootstrap tenants's consumers.\n%s", error)
+        children = active_children()
+        for child in children:
+            LOGGER.warn("Terminating [{}] ...".format(child.name))
+            child.terminate()
+        LOGGER.error("Failed to bootstrap tenants's consumers:\n{}".format(error))
+        LOGGER.critical("Exiting.")
         exit(1)
