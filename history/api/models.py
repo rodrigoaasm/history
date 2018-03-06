@@ -110,9 +110,15 @@ class DeviceHistory(object):
         """ returns mongo compatible query object, based on the query params provided """
 
         if 'lastN' in request.params.keys():
-            limit_val = int(request.params['lastN'])
+            try:
+                limit_val = int(request.params['lastN'])
+            except ValueError as e:
+                raise falcon.HTTPInvalidParam('Must be integer.', 'lastN')
         elif 'hLimit' in request.params.keys():
-            limit_val = int(request.params['hLimit'])
+            try:
+                limit_val = int(request.params['hLimit'])
+            except ValueError as e:
+                raise falcon.HTTPInvalidParam('Must be integer.','hLimit')
         else:
             raise falcon.HTTPMissingParam('lastN')
 
