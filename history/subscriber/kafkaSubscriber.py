@@ -1,8 +1,10 @@
+from __future__ import division
 import base64
 import logging
 import json
 import time
 from datetime import datetime
+from dateutil.parser import parse
 from multiprocessing import Process, active_children
 
 import requests
@@ -49,7 +51,7 @@ class TenancyHandler(KafkaEventHandler):
         response = requests.get(target, timeout=3)
         if 200 <= response.status_code < 300:
             payload = response.json()
-            LOGGER.debug('Got list of tenants', payload)
+            LOGGER.debug('Got list of tenants %s', payload)
             for tenant in payload['tenants']:
                 LOGGER.debug('initializing tenant %s', tenant)
                 TenancyHandler._spawn_watcher(tenant, settings.DEVICE_SUBJECT, DeviceHandler())
@@ -108,6 +110,31 @@ class DataHandler(KafkaEventHandler):
         collection_name = "{}_{}".format(self.service, message['metadata']['deviceid'])
         return self.db['device_history'][collection_name]
 
+    @staticmethod
+    def parse_datetime(timestamp):
+        if timestamp is None:
+            return datetime.utcnow()
+        
+        try:
+            val = int(timestamp)
+            if timestamp > ((2**31)-1):
+                return datetime.utcfromtimestamp(val/1000)
+            else:
+                return datetime.utcfromtimestamp(float(timestamp))
+        except ValueError as error:
+            LOGGER.error("Failed to parse timestamp ({})\n{}".format(timestamp, error))
+        
+        try:
+            return datetime.utcfromtimestamp(float(timestamp)/1000)
+        except ValueError as error:
+            LOGGER.error("Failed to parse timestamp ({})\n{}".format(timestamp, error))
+        
+        try:
+            return parse(timestamp)
+        except TypeError as error:
+            raise TypeError('Timestamp could not be parsed: {}\n{}'.format(timestamp, error))
+
+
     def handle_event(self, message):
         """
             Given a device data event, persist it to mongo
@@ -131,7 +158,8 @@ class DataHandler(KafkaEventHandler):
             LOGGER.error('Received event cannot be traced to a valid device. Ignoring')
             return
 
-        timestamp = metadata.get('timestamp', datetime.utcnow())
+        timestamp = DataHandler.parse_datetime(metadata.get('timestamp', None))
+
         docs = []
         for attr in data['attrs'].keys():
             entry = {}
