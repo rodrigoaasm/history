@@ -1,0 +1,147 @@
+FORMAT: 1A
+HOST: http://localhost:8000
+
+# Historic
+The raw data stored in the STH can be consumed in the following ways:
+
+## Filtering by device id [/device/{device_id}/history?lastN={lastN}&attr={attr}]
+Gets the raw data for a device attribute
+
++ Parameters
+    + device_id:labtemp (required, string) - Identifier of the entity whose associated raw data wants to be retrieved.
+    + attr:temperature (required, string) - Name of the attribute whose associated raw data wants to be retrieved.
+    + lastN:3 (optional, number) - Last number of values for this attribute (attr)
+      + Default: 1
+
+### Get raw data [GET]
++ Request (application/json)
+  + Headers
+
+            Authorization: Bearer JWT
+
++ Response 200 (application/json; charset=UTF-8)
+
+  + body
+
+            [
+              {
+                "device_id": "labtemp",
+                "ts": "2014-02-14T13:43:33.306Z",
+                "value": "22.12",
+                "attr": "temperature"
+              }
+            ]
+
+## Filtering by offset and limit [/STH/v1/contextEntities/type/{device_type}/id/{device_id}/attributes/{attr}?hLimit={hLimit}&dateFrom={dateFrom}&dateTo={dateTo}]
+Gets the raw data stored by the STH from certain date onwards (or the origin of time if no starting date is provided) applying certain offset and a limit to the number of entries to be retrieved. Makes it possible to paginate over the stored raw data.
+
++ Parameters
+    + device_type:termometer (required, string) - Type of the entity whose associated raw data wants to be retrieved.
+    + device_id:labtemp (required, string) - Identifier of the entity whose associated raw data wants to be retrieved.
+    + attr:temperature (required, string) - Name of the attribute whose associated raw data wants to be retrieved.
+    + hLimit:3 (optional, number) - Maximum number of raw data entries to retrieve.
+    + dateFrom:2015-01-01T00:00:00.000Z (optional, date) - The starting date from which the raw data should be retrieved. If not provided, the origin of time is used.
+    + dateTo:2015-12-31T23:59:59.999Z (optional, date) - The final date until which the raw data should be retrieved. If not provided, the current date is used.
+
+### Get raw data [GET]
++ Request (application/json)
+
+    + header
+
+            Authorization: Bearer JWT
+
++ Response 200 (application/json; charset=UTF-8)
+
+    + body
+
+            {
+                "contextResponses": [
+                    {
+                        "contextElement": {
+                            "attributes": [
+                                {
+                                    "name": "temperature",
+                                    "values": [
+                                        {
+                                            "recvTime": "2014-02-14T13:43:33.306Z",
+                                            "attrValue": "21.28"
+                                        },
+                                        {
+                                            "recvTime": "2014-02-14T13:43:34.636Z",
+                                            "attrValue": "23.42"
+                                        },
+                                        {
+                                            "recvTime": "2014-02-14T13:43:35.424Z",
+                                            "attrValue": "22.12"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "id": "labtemp",
+                            "isPattern": false,
+                            "type": "termometer"
+                        },
+                        "statusCode": {
+                            "code": "200",
+                            "reasonPhrase": "OK"
+                        }
+                    }
+                ]
+            }
+
+## Filtering by number of last entries [/STH/v1/contextEntities/type/{device_type}/id/{device_id}/attributes/{attr}?lastN={lastN}&dateFrom={dateFrom}&dateTo={dateTo}]
+Gets the raw data stored by the STH since certain date backwards (or the current time if no final date is provided) limiting the number of results to be retrieved.
+
++ Parameters
+    + device_type:termometer (required, string) - Type of the entity whose associated raw data wants to be retrieved.
+    + device_id:labtemp (required, string) - Identifier of the entity whose associated raw data wants to be retrieved.
+    + attr:temperature (required, string) - Name of the attribute whose associated raw data wants to be retrieved.
+    + lastN:5 (required, number) - Number of raw data entries to retrieve since the final date backwards.
+    + dateFrom:2015-01-01T00:00:00.000Z (optional, date) - The starting date from which the raw data should be retrieved. If not provided, the origin of time is used.
+    + dateTo:2015-12-31T23:59:59.999Z (optional, date) - The final date until which the raw data should be retrieved. If not provided, the current date is used.
+
+### Get raw data [GET]
++ Request (application/json)
+
+    + header
+
+            Authorization: Bearer JWT
+
++ Response 200 (application/json; charset=UTF-8)
+
+    + body
+
+            {
+                "contextResponses": [
+                    {
+                        "contextElement": {
+                            "attributes": [
+                                {
+                                    "name": "temperature",
+                                    "values": [
+                                        {
+                                            "recvTime": "2014-02-14T13:43:33.306Z",
+                                            "attrValue": "21.28"
+                                        },
+                                        {
+                                            "recvTime": "2014-02-14T13:43:34.636Z",
+                                            "attrValue": "23.42"
+                                        },
+                                        {
+                                            "recvTime": "2014-02-14T13:43:35.424Z",
+                                            "attrValue": "22.12"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "id": "labtemp",
+                            "isPattern": false,
+                            "type": "termometer"
+                        },
+                        "statusCode": {
+                            "code": "200",
+                            "reasonPhrase": "OK"
+                        }
+                    }
+                ]
+            }

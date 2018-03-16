@@ -1,9 +1,13 @@
 sudo: false
 language: python
+python:
+  - 2.7
 
 script:
-  - docker build -t local/history -f docker/history.docker .
-  - docker build -t local/persister -f docker/persister.docker .
+  - docker build -t ${TRAVIS_REPO_SLUG} .
+  - docker build -t history-tests . -f ./tests/Dockerfile
+  - docker-compose -f ./tests/docker-compose.yml up -d mongodb
+  - docker-compose -f ./tests/docker-compose.yml run history
 services:
   - docker
 after_success:
