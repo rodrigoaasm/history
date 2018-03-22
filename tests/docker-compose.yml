@@ -1,0 +1,25 @@
+version: '2.1'
+services:
+
+  history:
+    image: history-tests
+    restart: "no"
+    depends_on:
+      - mongodb
+    ports:
+      - "8000:8000"
+    environment:
+      FALCON_SETTINGS_MODULE: "history.settings.docker"
+    logging:
+      driver: json-file
+      options:
+        max-size: 100m
+
+  mongodb:
+    image: "mongo:3.2"
+    restart: "no"
+    user: "mongodb"
+    logging:
+      driver: json-file
+      options:
+        max-size: 100m
