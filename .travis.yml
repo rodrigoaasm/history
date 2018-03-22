@@ -4,7 +4,6 @@ python:
   - 2.7
 
 script:
-  - docker build -t ${TRAVIS_REPO_SLUG} .
   - docker build -t history-tests . -f ./tests/Dockerfile
   - docker-compose -f ./tests/docker-compose.yml up -d mongodb
   - docker-compose -f ./tests/docker-compose.yml run history
