@@ -1,4 +1,4 @@
-FROM dredd-python2
+FROM dojot/dredd-python:2.7
 
 RUN pip install cython
 
