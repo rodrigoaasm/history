@@ -2,6 +2,12 @@ sudo: false
 language: python
 python:
   - 2.7
+cache:
+  directories:
+  - node_modules
+
+before_install:
+  - npm install aglio
 
 script:
   - docker build -t history-tests . -f ./tests/Dockerfile
@@ -13,3 +19,4 @@ services:
 
 after_success:
   - travis/publish.sh
+  - travis/deploy-gh-pages.sh
