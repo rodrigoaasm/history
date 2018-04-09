@@ -114,7 +114,7 @@ class DataHandler(KafkaEventHandler):
     def parse_datetime(timestamp):
         if timestamp is None:
             return datetime.utcnow()
-        
+
         try:
             val = int(timestamp)
             if timestamp > ((2**31)-1):
@@ -123,12 +123,12 @@ class DataHandler(KafkaEventHandler):
                 return datetime.utcfromtimestamp(float(timestamp))
         except ValueError as error:
             LOGGER.error("Failed to parse timestamp ({})\n{}".format(timestamp, error))
-        
+
         try:
             return datetime.utcfromtimestamp(float(timestamp)/1000)
         except ValueError as error:
             LOGGER.error("Failed to parse timestamp ({})\n{}".format(timestamp, error))
-        
+
         try:
             return parse(timestamp)
         except TypeError as error:
@@ -161,15 +161,22 @@ class DataHandler(KafkaEventHandler):
         timestamp = DataHandler.parse_datetime(metadata.get('timestamp', None))
 
         docs = []
-        for attr in data['attrs'].keys():
-            entry = {}
-            entry['attr'] = attr
-            entry['value'] = data['attrs'][attr]
-            entry['device_id'] = device_id
-            entry['ts'] = timestamp
-            # Should we store value type too? it is not sent by agents anymore
-            # Should we store template information too? it is not sent by agents anymore
-            docs.append(entry)
+        for attr in data.get('attrs', {}).keys():
+            docs.append({
+                'attr': attr,
+                'value': data['attrs'][attr],
+                'device_id': device_id,
+                'ts': timestamp
+            })
+
+        # Persist device status history as well
+        device_status = metadata.get('status', None)
+        if device_status is not None:
+            docs.append({
+                'status': device_status,
+                'device_id': device_id,
+                'ts': timestamp
+            })
 
         if len(docs) > 0:
             try:
