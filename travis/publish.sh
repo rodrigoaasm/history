@@ -6,12 +6,15 @@ if [ ${TRAVIS_BRANCH} != "master" ] ; then
   version=${TRAVIS_BRANCH}
 fi
 
+username=$(echo ${TRAVIS_REPO_SLUG}  | sed  "s/\(.*\)\/.*/\1/")
+docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
+
 function buildPublish() {
-  tag="${1}:${version}"
-  docker build -t ${tag} -f docker/${2} .
-  docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
+  tag=${username}"/"$1:$version
+  docker tag $1 ${tag}
+  echo "Pushing tag ${tag}"
   docker push $tag
 }
 
-buildPublish "dojot/history" history.docker
-buildPublish "dojot/persister" persister.docker
+buildPublish "history"
+buildPublish "persister"
