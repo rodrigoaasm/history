@@ -12,7 +12,7 @@ from kafka import KafkaConsumer
 from kafka.errors import KafkaTimeoutError
 import pymongo
 
-from history import settings
+from history import conf
 
 LOGGER = logging.getLogger('history.' + __name__)
 LOGGER.addHandler(logging.StreamHandler())
@@ -47,15 +47,15 @@ class TenancyHandler(KafkaEventHandler):
 
     def tenants_bootstrap(self):
         LOGGER.debug('will bootstrap')
-        target = "{}/admin/tenants".format(settings.AUTH)
+        target = "{}/admin/tenants".format(conf.auth_url)
         response = requests.get(target, timeout=3)
         if 200 <= response.status_code < 300:
             payload = response.json()
             LOGGER.debug('Got list of tenants %s', payload)
             for tenant in payload['tenants']:
                 LOGGER.debug('initializing tenant %s', tenant)
-                TenancyHandler._spawn_watcher(tenant, settings.DEVICE_SUBJECT, DeviceHandler())
-                TenancyHandler._spawn_watcher(tenant, settings.DATA_SUBJECT, DataHandler(tenant))
+                TenancyHandler._spawn_watcher(tenant, conf.dojot_subject_device, DeviceHandler())
+                TenancyHandler._spawn_watcher(tenant, conf.dojot_subject_device_data, DataHandler(tenant))
         else:
             LOGGER.error('Failed to retrieve list of existing tenants (%d)', response.status_code)
             exit(1)
@@ -71,8 +71,8 @@ class TenancyHandler(KafkaEventHandler):
         LOGGER.debug('got tenancy event for tenant: %s', data['tenant'])
 
         tenant = data['tenant']
-        TenancyHandler._spawn_watcher(tenant, settings.DEVICE_SUBJECT, DeviceHandler())
-        TenancyHandler._spawn_watcher(tenant, settings.DATA_SUBJECT, DataHandler(tenant))
+        TenancyHandler._spawn_watcher(tenant, conf.dojot_subject_device, DeviceHandler())
+        TenancyHandler._spawn_watcher(tenant, conf.dojot_subject_device_data, DataHandler(tenant))
 
 
 class DeviceHandler(KafkaEventHandler):
@@ -89,14 +89,14 @@ class DeviceHandler(KafkaEventHandler):
         LOGGER.debug('got device event %s', message)
 
         if self.db is None:
-            self.db = pymongo.MongoClient(settings.MONGO_DB, replicaSet=settings.REPLICA_SET)
+            self.db = pymongo.MongoClient(conf.db_host, replicaSet=conf.db_replica_set)
             self.db = self.db['device_history']
 
         collection_name = "{}_{}".format(data['meta']['service'], data['data']['id'])
         self.db[collection_name].create_index([('ts', pymongo.DESCENDING),
                                                ('attr', pymongo.DESCENDING)],
                                               unique=True)
-        self.db[collection_name].create_index('ts', expireAfterSeconds=settings.DATA_EXP)
+        self.db[collection_name].create_index('ts', expireAfterSeconds=conf.db_expiration)
 
 
 class DataHandler(KafkaEventHandler):
@@ -106,7 +106,7 @@ class DataHandler(KafkaEventHandler):
 
     def _get_collection(self, message):
         if self.db is None:
-            self.db = pymongo.MongoClient(settings.MONGO_DB, replicaSet=settings.REPLICA_SET)
+            self.db = pymongo.MongoClient(conf.db_host, replicaSet=conf.db_replica_set)
         collection_name = "{}_{}".format(self.service, message['metadata']['deviceid'])
         return self.db['device_history'][collection_name]
 
@@ -202,8 +202,8 @@ class KafkaListener(Process):
         Process.__init__(self, name=name)
 
         self.topic = topic
-        self.broker = [settings.KAFKA_HOST]
-        self.group_id = settings.KAFKA_GROUP_ID
+        self.broker = [conf.kafka_host]
+        self.group_id = conf.kafka_group_id
         self.consumer = None
 
         # Callback must be of type KafkaEventHandler
@@ -267,7 +267,7 @@ def get_topic(service, subject, global_subject=False):
     """
     start = time.time()
     opts = "?global=true" if global_subject else ""
-    target = "{}/topic/{}{}".format(settings.DATA_BROKER, subject, opts)
+    target = "{}/topic/{}{}".format(conf.data_broker_url, subject, opts)
     jwt = _get_token(service)
     response = requests.get(target, headers={"authorization": jwt}, timeout=3)
     if 200 <= response.status_code < 300:
@@ -281,7 +281,7 @@ def get_topic(service, subject, global_subject=False):
 if __name__ == '__main__':
     # Spawns tenancy management thread
     try:
-        tenancy_topic = get_topic('internal', settings.TENANCY_SUBJECT, True)
+        tenancy_topic = get_topic(conf.dojot_service_management, conf.dojot_subject_tenancy, True)
         handler = TenancyHandler()
         tenant_watcher = KafkaListener(tenancy_topic, handler, name="tenancy-watcher")
         tenant_watcher.start()
