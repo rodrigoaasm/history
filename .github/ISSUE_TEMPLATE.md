@@ -27,6 +27,8 @@
 * **Please tell us about your environment:**
   
   - Version: 0.2.x
+  - Environment: [kubernetes, docker-compose, standalone]
+  - Operating system: [Ubuntu 16.04, Fedora 28, Ubuntu on VirtualBox (Windows 10), etc.]
 
 
 * **Other information** (e.g. detailed explanation, stacktraces, related issues, suggestions how to fix, links for us to have context, eg. stackoverflow, gitter, etc)
