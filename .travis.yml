@@ -1,22 +1,22 @@
-sudo: false
 language: python
+sudo: required
+services:
+  - mongodb
 python:
-  - 2.7
-cache:
-  directories:
-  - node_modules
-
-before_install:
-  - npm install aglio
+  - '2.7'
+install:
+  - pip install -r requirements/requirements.txt -r tests/requirements.txt
+  - npm install -g dredd --no-optional
+before_script:
+  - python setup.py install
+env:
+  global:
+    - HISTORY_DB_ADDRESS: "localhost"
 
 script:
-  - docker build -t history-tests . -f ./tests/Dockerfile
-  - docker-compose -f ./tests/docker-compose.yml up -d mongodb
-  - docker-compose -f ./tests/docker-compose.yml run history
-
-services:
-  - docker
-
+  - docker build -t history -f ./docker/history.docker .
+  - docker build -t persister -f ./docker/persister.docker .
+  - ./tests/start-test.sh
 after_success:
   - travis/publish.sh
   - travis/deploy-gh-pages.sh

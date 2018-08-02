@@ -3,9 +3,12 @@ import os
 
 import setuptools
 
-from pip import download
-from pip import req
-
+try:
+    from pip import download
+    from pip import req
+except:
+    from pip._internal import download
+    from pip._internal import req
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
@@ -13,6 +16,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 def get_requirements(reqfile):
     path = os.path.join(HERE, reqfile)
     deps = list()
+    
     for dep in req.parse_requirements(path, session=download.PipSession()):
         try:
             # Pip 8.1.2 Compatible
@@ -41,7 +45,6 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     include_package_data=True,
     install_requires=get_requirements('requirements/requirements.txt'),
-    tests_require=get_requirements('requirements/test-requirements.txt'),
     setup_requires=('versiontools'),
 
     author='Matheus Magalhaes',

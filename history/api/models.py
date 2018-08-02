@@ -10,7 +10,7 @@ import dateutil.parser
 import falcon
 import pymongo
 
-from history import settings
+from history import conf
 
 class AuthMiddleware(object):
     """
@@ -72,7 +72,7 @@ class AuthMiddleware(object):
 
 class HistoryUtil(object):
 
-    db = pymongo.MongoClient(settings.MONGO_DB, replicaSet=settings.REPLICA_SET)
+    db = pymongo.MongoClient(conf.db_host, replicaSet=conf.db_replica_set)
 
     @staticmethod
     def get_db():

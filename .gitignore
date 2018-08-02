@@ -3,3 +3,7 @@
 .eggs/
 history.egg-info/
 .vscode
+venv/
+build/
+.vscode
+dist/

@@ -8,7 +8,7 @@ App runner
 import falcon
 
 # Local imports
-from history import settings
+from history import conf
 from history.api.models import DeviceHistory, STHHistory, AuthMiddleware
 
 # Create falcon app
