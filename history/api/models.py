@@ -9,8 +9,13 @@ import logging
 import dateutil.parser
 import falcon
 import pymongo
+import requests
 
 from history import conf
+
+logger = logging.getLogger('history.' + __name__)
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.DEBUG)
 
 class AuthMiddleware(object):
     """
@@ -18,11 +23,6 @@ class AuthMiddleware(object):
         Also used to validate and refuse requests that do not contain valid tokens associated
         with them.
     """
-
-    def __init__(self):
-        self.logger = logging.getLogger('history.' + __name__)
-        self.logger.addHandler(logging.StreamHandler())
-        self.logger.setLevel(logging.DEBUG)
 
     def process_request(self, req, resp):
         challenges = ['Token type="JWT"']
@@ -66,7 +66,7 @@ class AuthMiddleware(object):
             data = json.loads(AuthMiddleware._decode_base64(payload))
             return data['service']
         except Exception as exception:
-            self.logger.error(exception)
+            logger.error(exception)
             return None
 
 
@@ -88,22 +88,8 @@ class HistoryUtil(object):
             raise falcon.HTTPNotFound(title="Device not found",
                                       description="No data for the given device could be found")
 
-    @staticmethod
-    def check_mandatory_query_param(params, field, ftype=None):
-        if (field not in params.keys()) or (len(params[field]) == 0):
-            raise falcon.HTTPMissingParam(field)
-
-        if ftype is not None:
-            if not ftype(params[field]):
-                raise falcon.HTTPInvalidParam(
-                    '%s must be of type %s' % (field, ftype.__name__), field)
-
 class DeviceHistory(object):
     """Service used to retrieve a given device historical data"""
-
-    logger = logging.getLogger('history.' + __name__)
-    logger.addHandler(logging.StreamHandler())
-    logger.setLevel(logging.DEBUG)
 
     @staticmethod
     def parse_request(request, attr):
@@ -120,9 +106,10 @@ class DeviceHistory(object):
             except ValueError as e:
                 raise falcon.HTTPInvalidParam('Must be integer.','hLimit')
         else:
-            raise falcon.HTTPMissingParam('lastN')
+            limit_val = False
 
-        query = {'attr': attr, 'value': {'$ne': ' '}}
+        if attr:
+            query = {'attr': attr, 'value': {'$ne': ' '}}
         ts_filter = {}
         if 'dateFrom' in request.params.keys():
             ts_filter['$gte'] = dateutil.parser.parse(request.params['dateFrom'])
@@ -136,6 +123,22 @@ class DeviceHistory(object):
 
         return {'query': query, 'limit': limit_val, 'filter': ls_filter, 'sort': sort}
 
+
+    @staticmethod
+    def get_attrs(device_id, token):
+        """Requests infos of the device to device-manager then get all the attrs related to the device"""
+        response = requests.get(conf.device_manager_url+'/device/'+device_id, headers={'Authorization': token})
+        attrs_list = []
+        """response.text contains the attrs of the device"""
+        json_data = json.loads(response.text)
+
+        for k in json_data['attrs']:
+            for d in json_data['attrs'][k]:
+                 if 'label' in d:
+                    attrs_list.append(d['label'])
+        return attrs_list
+
+
     @staticmethod
     def get_single_attr(collection, query):
         cursor = collection.find(query['query'],
@@ -144,29 +147,39 @@ class DeviceHistory(object):
                                  limit=query['limit'])
         history = []
         for d in cursor:
-            entry = d
-            entry['ts'] = d['ts'].isoformat() + 'Z'
+            d['ts'] = d['ts'].isoformat() + 'Z'
             history.append(d)
         return history
-
+        
     @staticmethod
-    def on_get(req, resp, device_id):
-        HistoryUtil.check_mandatory_query_param(req.params, 'attr')
+    def on_get(req, resp, device_id):  
 
+        logger.info('AAA')
         collection = HistoryUtil.get_collection(req.context['related_service'], device_id)
 
-        if isinstance(req.params['attr'], list):
-            DeviceHistory.logger.info('got list of attrs')
-            history = {}
-            for attr in req.params['attr']:
-                query = DeviceHistory.parse_request(req, attr)
-                history[attr] = DeviceHistory.get_single_attr(collection, query)
-        else:
-            history = DeviceHistory.get_single_attr(
+        if 'attr' in req.params.keys():
+            if isinstance(req.params['attr'], list):
+                logger.info('got list of attrs')
+                history = {}
+                for attr in req.params['attr']:
+                    query = DeviceHistory.parse_request(req, attr)
+                    history[attr] = DeviceHistory.get_single_attr(collection, query)
+            else:
+                history = DeviceHistory.get_single_attr(
                 collection, DeviceHistory.parse_request(req, req.params['attr']))
-            if len(history) == 0:
-                msg = "No data for the given attribute could be found"
-                raise falcon.HTTPNotFound(title="Attr not found", description=msg)
+                if len(history) == 0:
+                    msg = "No data for the given attribute could be found"
+                    raise falcon.HTTPNotFound(title="Attr not found", description=msg)
+        else:
+            logger.info('will return all the attrs')
+            history = {}
+            token = req.get_header('authorization')
+            """Get list of attrs that are stored in device-manager"""
+            attrs_list = DeviceHistory.get_attrs(device_id,token)
+            for attr in attrs_list:
+                query = DeviceHistory.parse_request(req,attr)
+                history[attr] = DeviceHistory.get_single_attr(collection,query)
+
 
         resp.status = falcon.HTTP_200
         resp.body = json.dumps(history)
