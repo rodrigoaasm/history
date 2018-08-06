@@ -36,3 +36,4 @@ resp_json = {
 @app.route('/device/<device_id>')
 def get_device(device_id):
     return json.dumps(resp_json)
+    

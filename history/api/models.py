@@ -129,7 +129,6 @@ class DeviceHistory(object):
         """Requests infos of the device to device-manager then get all the attrs related to the device"""
         response = requests.get(conf.device_manager_url+'/device/'+device_id, headers={'Authorization': token})
         attrs_list = []
-        """response.text contains the attrs of the device"""
         json_data = json.loads(response.text)
 
         for k in json_data['attrs']:
@@ -174,7 +173,6 @@ class DeviceHistory(object):
             logger.info('will return all the attrs')
             history = {}
             token = req.get_header('authorization')
-            """Get list of attrs that are stored in device-manager"""
             attrs_list = DeviceHistory.get_attrs(device_id,token)
             for attr in attrs_list:
                 query = DeviceHistory.parse_request(req,attr)

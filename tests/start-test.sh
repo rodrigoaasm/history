@@ -3,7 +3,7 @@ export DEVICE_MANAGER_URL="http://localhost:5000"
 export FLASK_APP=apptests.py
 cd tests
 flask run & 
-cd -
+cd back
 echo Starting dredd
 dredd --hookfiles "./tests/dredd-hooks/*hook.py" \
  --server "gunicorn history.app:app \
