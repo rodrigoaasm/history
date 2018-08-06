@@ -153,7 +153,6 @@ class DeviceHistory(object):
     @staticmethod
     def on_get(req, resp, device_id):  
 
-        logger.info('AAA')
         collection = HistoryUtil.get_collection(req.context['related_service'], device_id)
 
         if 'attr' in req.params.keys():
