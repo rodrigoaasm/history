@@ -50,3 +50,5 @@ dojot_service_management = os.environ.get("DOJOT_SERVICE_MANAGEMENT",
 data_broker_url = os.environ.get("DATA_BROKER_URL", "http://data-broker")
 # auth related configuration
 auth_url = os.environ.get('AUTH_URL', "http://auth:5000")
+# device-manager URL
+device_manager_url = os.environ.get('DEVICE_MANAGER_URL', "http://device-manager:5000")

@@ -35,3 +35,6 @@ def create__device(transaction):
     }
     data_handler = DataHandler("admin")
     data_handler.handle_event(json.dumps(_update_data))
+
+    _update_data['attrs']['temperature'] = "23.12"
+    data_handler.handle_event(json.dumps(_update_data))
