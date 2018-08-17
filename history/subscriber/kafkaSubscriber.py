@@ -78,6 +78,7 @@ class TenancyHandler(KafkaEventHandler):
 class DeviceHandler(KafkaEventHandler):
     def __init__(self):
         self.db = None
+        self.client = None
 
     def handle_event(self, message):
         """
@@ -89,26 +90,37 @@ class DeviceHandler(KafkaEventHandler):
         LOGGER.debug('got device event %s', message)
 
         if self.db is None:
-            self.db = pymongo.MongoClient(conf.db_host, replicaSet=conf.db_replica_set)
-            self.db = self.db['device_history']
+            self.client = pymongo.MongoClient(conf.db_host, replicaSet=conf.db_replica_set)
+            self.db = self.client['device_history']
 
         collection_name = "{}_{}".format(data['meta']['service'], data['data']['id'])
-        self.db[collection_name].create_index([('ts', pymongo.DESCENDING),
-                                               ('attr', pymongo.DESCENDING)],
-                                              unique=True)
+        self.db[collection_name].create_index([('ts', pymongo.DESCENDING)])
         self.db[collection_name].create_index('ts', expireAfterSeconds=conf.db_expiration)
+        self.db[collection_name].create_index([('attr', pymongo.HASHED)])
+
+        self.client.admin.command('enableSharding', self.db.name)
+        self.client.admin.command('shardCollection', self.db[collection_name].full_name, key={'attr': 'hashed'})
 
 
 class DataHandler(KafkaEventHandler):
     def __init__(self, service):
         self.service = service
         self.db = None
+        self.client = None
 
     def _get_collection(self, message):
         if self.db is None:
-            self.db = pymongo.MongoClient(conf.db_host, replicaSet=conf.db_replica_set)
+            self.client = pymongo.MongoClient(conf.db_host, replicaSet=conf.db_replica_set)
+            self.db = self.client['device_history']
+
         collection_name = "{}_{}".format(self.service, message['metadata']['deviceid'])
-        return self.db['device_history'][collection_name]
+        self.db[collection_name].create_index([('ts', pymongo.DESCENDING)])
+        self.db[collection_name].create_index('ts', expireAfterSeconds=conf.db_expiration)
+        self.db[collection_name].create_index([('attr', pymongo.HASHED)])
+
+        self.client.admin.command('enableSharding', self.db.name)
+        self.client.admin.command('shardCollection', self.db[collection_name].full_name, key={'attr': 'hashed'})
+        return self.db[collection_name]
 
     @staticmethod
     def parse_datetime(timestamp):
