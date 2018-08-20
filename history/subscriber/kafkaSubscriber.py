@@ -97,7 +97,7 @@ class TenancyHandler(DojotEventHandler):
 
 class DeviceHandler(DojotEventHandler):
     def __init__(self):
-        super().__init__(self)
+        DojotEventHandler.__init__(self)
 
     def handle_event(self, message):
         """
@@ -114,12 +114,14 @@ class DeviceHandler(DojotEventHandler):
             self.init_mongodb(collection_name)
 
         self.create_indexes(collection_name)
-        self.enable_collection_sharding(collection_name)
+
+        if conf.db_shard:
+            self.enable_collection_sharding(collection_name)
 
 
 class DataHandler(DojotEventHandler):
     def __init__(self, service):
-        super().__init__(self)
+        DojotEventHandler.__init__(self)
         self.service = service
 
     def _get_collection(self, message):
@@ -128,7 +130,9 @@ class DataHandler(DojotEventHandler):
         if self.db is None:
             self.init_mongodb(collection_name)
 
-        self.enable_collection_sharding(collection_name)
+        if conf.db_shard:
+            self.enable_collection_sharding(collection_name)
+
         return self.db[collection_name]
 
     @staticmethod

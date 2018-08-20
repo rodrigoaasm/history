@@ -21,6 +21,7 @@ db_port = os.environ.get("HISTORY_DB_PORT", 27017)
 db_host = "" + db_address + ":" + str(db_port)
 db_replica_set = os.environ.get("HISTORY_DB_REPLICA_SET", None)
 db_expiration = os.environ.get('HISTORY_DB_DATA_EXPIRATION', 604800)
+db_shard = os.environ.get('MONGO_SHARD', False)
 
 # Kafka configuration
 kafka_address = os.environ.get("KAFKA_ADDRESS", "kafka")
