@@ -22,10 +22,30 @@ class ConfigurationError(Exception):
     pass
 
 
-class KafkaEventHandler(object):
+class DojotEventHandler(object):
     """
         Base callback structure for kafka events callbacks
     """
+
+    def __init__(self):
+        self.client = None
+        self.db = None
+
+    def init_mongodb(self, collection_name=None):
+        self.client = pymongo.MongoClient(conf.db_host, replicaSet=conf.db_replica_set)
+        self.db = self.client['device_history']
+        if collection_name:
+            self.create_indexes(collection_name)
+
+    def create_indexes(self, collection_name):
+        self.db[collection_name].create_index([('ts', pymongo.DESCENDING)])
+        self.db[collection_name].create_index('ts', expireAfterSeconds=conf.db_expiration)
+
+    def enable_collection_sharding(self, collection_name):
+        self.db[collection_name].create_index([('attr', pymongo.HASHED)])
+        self.client.admin.command('enableSharding', self.db.name)
+        self.client.admin.command('shardCollection', self.db[collection_name].full_name, key={'attr': 'hashed'})
+
     def handle_event(self, message):
         """
             Handles a given kafka received message
@@ -33,7 +53,7 @@ class KafkaEventHandler(object):
         """
         raise NotImplementedError("Abstract method called")
 
-class TenancyHandler(KafkaEventHandler):
+class TenancyHandler(DojotEventHandler):
 
     def __init__(self):
         pass
@@ -75,9 +95,9 @@ class TenancyHandler(KafkaEventHandler):
         TenancyHandler._spawn_watcher(tenant, conf.dojot_subject_device_data, DataHandler(tenant))
 
 
-class DeviceHandler(KafkaEventHandler):
+class DeviceHandler(DojotEventHandler):
     def __init__(self):
-        self.db = None
+        DojotEventHandler.__init__(self)
 
     def handle_event(self, message):
         """
@@ -88,27 +108,32 @@ class DeviceHandler(KafkaEventHandler):
         data = json.loads(message)
         LOGGER.debug('got device event %s', message)
 
-        if self.db is None:
-            self.db = pymongo.MongoClient(conf.db_host, replicaSet=conf.db_replica_set)
-            self.db = self.db['device_history']
-
         collection_name = "{}_{}".format(data['meta']['service'], data['data']['id'])
-        self.db[collection_name].create_index([('ts', pymongo.DESCENDING),
-                                               ('attr', pymongo.DESCENDING)],
-                                              unique=True)
-        self.db[collection_name].create_index('ts', expireAfterSeconds=conf.db_expiration)
+
+        if self.db is None:
+            self.init_mongodb(collection_name)
+
+        self.create_indexes(collection_name)
+
+        if conf.db_shard:
+            self.enable_collection_sharding(collection_name)
 
 
-class DataHandler(KafkaEventHandler):
+class DataHandler(DojotEventHandler):
     def __init__(self, service):
+        DojotEventHandler.__init__(self)
         self.service = service
-        self.db = None
 
     def _get_collection(self, message):
-        if self.db is None:
-            self.db = pymongo.MongoClient(conf.db_host, replicaSet=conf.db_replica_set)
         collection_name = "{}_{}".format(self.service, message['metadata']['deviceid'])
-        return self.db['device_history'][collection_name]
+
+        if self.db is None:
+            self.init_mongodb(collection_name)
+
+        if conf.db_shard:
+            self.enable_collection_sharding(collection_name)
+
+        return self.db[collection_name]
 
     @staticmethod
     def parse_datetime(timestamp):
@@ -197,7 +222,7 @@ class KafkaListener(Process):
         """
             Constructor.
             :param callback Who to call when a new message arrives. Must be an instance of
-                            KafkaEventHandler
+                            DojotEventHandler
         """
         Process.__init__(self, name=name)
 
@@ -206,7 +231,7 @@ class KafkaListener(Process):
         self.group_id = conf.kafka_group_id
         self.consumer = None
 
-        # Callback must be of type KafkaEventHandler
+        # Callback must be of type DojotEventHandler
         self.callback = callback
 
     def wait_init(self):
