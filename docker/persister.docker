@@ -8,4 +8,7 @@ WORKDIR /usr/src/app
 ADD . /usr/src/app
 RUN ["python", "setup.py", "develop"]
 
-CMD ["python", "history/subscriber/kafkaSubscriber.py"]
+RUN pip uninstall dojotmodulepython
+RUN pip install --extra-index-url http://172.22.0.1:8080/ dojotmodulepython --trusted-host 172.22.0.1
+
+CMD ["python", "history/subscriber/persister.py"]
