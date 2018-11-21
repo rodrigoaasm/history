@@ -22,7 +22,12 @@ db = None
 client = None
 
 def init_mongodb(collection_name=None):
-    LOGGER.critical("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+    """
+    MongoDB initialization
+
+    :type collection_name: str
+    :param collection_name: collection to create index 
+    """
     global db
     global client
     try:
@@ -35,17 +40,26 @@ def init_mongodb(collection_name=None):
         LOGGER.warn("Could not init mongo db client: %s" % error)
 
 def create_indexes(collection_name):
+    """
+    Create index given a collection
+
+    :type collection_name: str
+    :param collection_name: collection to create index 
+    """
     global db
     db[collection_name].create_index([('ts', pymongo.DESCENDING)])
     db[collection_name].create_index('ts', expireAfterSeconds=conf.db_expiration)
 
 def parse_message(data):
+    """
+    Formats message to save in MongoDB
+
+    :type data: dict
+    :param data: data that will be parsed to a format
+    """
     parsed_message = dict()
-    LOGGER.info("1")
     parsed_message['attrs'] = data['data']['attrs']
-    LOGGER.info("1")
     parsed_message['metadata'] = dict()
-    LOGGER.info("1")
     parsed_message['metadata']['timestamp'] = int(time.time() * 1000)
     parsed_message['metadata']['deviceid'] = data['data']['id']
     parsed_message['metadata']['tenant'] = data['meta']['service']
@@ -53,6 +67,12 @@ def parse_message(data):
     return json.dumps(parsed_message)
 
 def parse_datetime(timestamp):
+    """
+    Parses date time
+
+    :type timestamp: timestamp
+    :param timestamp: timestamp
+    """
     if timestamp is None:
         return datetime.utcnow()
     try:
@@ -75,7 +95,9 @@ def parse_datetime(timestamp):
 def handle_event_data(tenant, message):
     """
         Given a device data event, persist it to mongo
-        :param message A device data event
+
+
+        :param message: A device data event
     """
     global db
 
@@ -115,14 +137,13 @@ def handle_event_data(tenant, message):
     if len(docs) > 0:
         try:
             collection_name = "{}_{}".format(tenant,device_id)
-            LOGGER.info("collection_name: %s" % collection_name)
             db[collection_name].insert_many(docs)
         except Exception as error:
             LOGGER.warn('Failed to persist received information.\n%s', error)
     else:
         LOGGER.info('Got empty event from device [%s] - ignoring', device_id)
 
-def handle_event_devices(self, tenant, message):
+def handle_event_devices(tenant, message):
     """
         Given a device management event, create (if not alredy existent) proper indexes
         to suppor the new device
