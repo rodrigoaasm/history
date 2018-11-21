@@ -50,6 +50,19 @@ def create_indexes(collection_name):
     db[collection_name].create_index([('ts', pymongo.DESCENDING)])
     db[collection_name].create_index('ts', expireAfterSeconds=conf.db_expiration)
 
+def enable_collection_sharding(self, collection_name):
+    """
+    Create index given a collection
+
+    :type collection_name: str
+    :param collection_name: collection to create index 
+    """
+    global db
+    global client
+    db[collection_name].create_index([('attr', pymongo.HASHED)])
+    client.admin.command('enableSharding', self.db.name)
+    client.admin.command('shardCollection', self.db[collection_name].full_name, key={'attr': 'hashed'})
+
 def parse_message(data):
     """
     Formats message to save in MongoDB
@@ -96,7 +109,10 @@ def handle_event_data(tenant, message):
     """
         Given a device data event, persist it to mongo
 
+        :type tenant: str
+        :param tenant: tenant related to the event
 
+        :type message: str
         :param message: A device data event
     """
     global db
@@ -147,6 +163,11 @@ def handle_event_devices(tenant, message):
     """
         Given a device management event, create (if not alredy existent) proper indexes
         to suppor the new device
+        
+        :type tenant: str
+        :param tenant: tenant related to the event
+
+        :type message: str
         :param message Device lifecyle message, as produced by device manager
     """
     data = json.loads(message)
