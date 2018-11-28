@@ -1,23 +1,14 @@
-from dojotmodulepython import Messenger
-from dojotmodulepython import config
 import base64
-import logging
 import json
 import time
+import pymongo
 from datetime import datetime
 from dateutil.parser import parse
-from multiprocessing import Process, active_children
-
-import requests
-from kafka import KafkaConsumer
-from kafka.errors import KafkaTimeoutError
-import pymongo
 from history import conf
+from dojot.module import Messenger, Config
+from dojot.module.logger import Log
 
-LOGGER = logging.getLogger('history.' + __name__)
-LOGGER.addHandler(logging.StreamHandler())
-LOGGER.setLevel(logging.INFO)
-
+LOGGER = Log().color_log()
 db = None
 client = None
 
@@ -181,8 +172,13 @@ def handle_event_devices(tenant, message):
 
 
 def main():
+    """
+    Main, inits mongo, messenger, create channels read channels for device
+    and device-data topics and add callbacks to events related to that subjects
+    """
+    config = Config()
     init_mongodb()
-    messenger = Messenger("Persister")
+    messenger = Messenger("Persister",config)
     messenger.init()
     messenger.create_channel(config.dojot['subjects']['devices'], "r")
     messenger.create_channel(config.dojot['subjects']['device_data'], "r")
