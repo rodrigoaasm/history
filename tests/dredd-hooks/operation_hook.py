@@ -1,7 +1,7 @@
 import dredd_hooks as hooks
 import json
 
-from history.subscriber.kafkaSubscriber import DeviceHandler, DataHandler
+from history.subscriber.persister import Persister
 
 @hooks.before_each
 def create__device(transaction):
@@ -20,8 +20,9 @@ def create__device(transaction):
             "created": "2018-02-06T10:43:40.890330+00:00"
         }
     }
-    dev_handler = DeviceHandler()
-    dev_handler.handle_event(json.dumps(_create_device))
+    persister = Persister()
+    persister.init_mongodb()
+    persister.handle_event_devices("admin", json.dumps(_create_device))
 
     _update_data = {
         "metadata": {
@@ -33,8 +34,7 @@ def create__device(transaction):
             "temperature": "22.12"
         }
     }
-    data_handler = DataHandler("admin")
-    data_handler.handle_event(json.dumps(_update_data))
+    persister.handle_event_data("admin", json.dumps(_update_data))
 
     _update_data['attrs']['temperature'] = "23.12"
-    data_handler.handle_event(json.dumps(_update_data))
+    persister.handle_event_data("admin", json.dumps(_update_data))
