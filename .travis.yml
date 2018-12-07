@@ -3,7 +3,7 @@ sudo: required
 services:
   - mongodb
 python:
-  - '2.7'
+  - '3.6'
 install:
   - pip install -r requirements/requirements.txt -r tests/requirements.txt
   - npm install -g dredd --no-optional

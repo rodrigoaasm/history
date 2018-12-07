@@ -47,8 +47,8 @@ class AuthMiddleware(object):
         """
         missing_padding = len(data) % 4
         if missing_padding != 0:
-            data += b'='* (4 - missing_padding)
-        return base64.decodestring(data)
+            data += '='* (4 - missing_padding)
+        return base64.decodestring(data.encode('utf-8'))
 
 
     def _parse_token(self, token):
