@@ -6,7 +6,7 @@ if [ $TRAVIS_PULL_REQUEST == false ] ; then
   fi
 
   username=$(echo ${TRAVIS_REPO_SLUG}  | sed  "s/\(.*\)\/.*/\1/")
-  docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
+  echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
   function buildPublish() {
     tag=${username}"/"$1:$version
