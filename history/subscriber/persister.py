@@ -162,7 +162,7 @@ class Persister:
             collection_name = "{}_{}".format(
                 data['meta']['service'], data['data']['id'])
             self.create_indexes(collection_name)
-        if data["event"] == "configure":
+        elif data["event"] == "configure":
             new_message = self.parse_message(data)
             self.handle_event_data(tenant, new_message)
 
