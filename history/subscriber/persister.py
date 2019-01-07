@@ -159,8 +159,7 @@ class Persister:
         data = json.loads(message)
         self.LOGGER.info('got device event %s', data)
         if data["event"] == "device.create" or data["event"] == "device.update":
-            collection_name = "{}_{}".format(
-                data['meta']['service'], data['data']['id'])
+            collection_name = "{}_{}".format(data['meta']['service'], data['data']['id'])
             self.create_indexes(collection_name)
         elif data["event"] == "configure":
             new_message = self.parse_message(data)
