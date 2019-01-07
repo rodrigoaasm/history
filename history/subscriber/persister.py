@@ -20,7 +20,7 @@ class Persister:
         MongoDB initialization
 
         :type collection_name: str
-        :param collection_name: collection to create index 
+        :param collection_name: collection to create index
         """
         try:
             self.client = pymongo.MongoClient(conf.db_host, replicaSet=conf.db_replica_set)
@@ -36,7 +36,7 @@ class Persister:
         Create index given a collection
 
         :type collection_name: str
-        :param collection_name: collection to create index 
+        :param collection_name: collection to create index
         """
         self.db[collection_name].create_index([('ts', pymongo.DESCENDING)])
         self.db[collection_name].create_index('ts', expireAfterSeconds=conf.db_expiration)
@@ -46,7 +46,7 @@ class Persister:
         Create index given a collection
 
         :type collection_name: str
-        :param collection_name: collection to create index 
+        :param collection_name: collection to create index
         """
         self.db[collection_name].create_index([('attr', pymongo.HASHED)])
         self.client.admin.command('enableSharding', self.db.name)
@@ -158,10 +158,11 @@ class Persister:
         """
         data = json.loads(message)
         self.LOGGER.info('got device event %s', data)
-        if(data['event'] != "configure"):
-            collection_name = "{}_{}".format(data['meta']['service'], data['data']['id'])
+        if data["event"] == "device.create" or data["event"] == "device.update":
+            collection_name = "{}_{}".format(
+                data['meta']['service'], data['data']['id'])
             self.create_indexes(collection_name)
-        else:
+        if data["event"] == "configure":
             new_message = self.parse_message(data)
             self.handle_event_data(tenant, new_message)
 
