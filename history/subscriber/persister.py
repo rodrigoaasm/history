@@ -8,10 +8,12 @@ from history import conf
 from dojot.module import Messenger, Config
 from dojot.module.logger import Log
 
+LOGGER = Log().color_log()
+
 class Persister:
 
     def __init__(self):
-        self.LOGGER = Log().color_log()
+        LOGGER = Log().color_log()
         self.db = None
         self.client = None
 
@@ -27,9 +29,9 @@ class Persister:
             self.db = self.client['device_history']
             if collection_name:
                 self.create_indexes(collection_name)
-            self.LOGGER.info("db initialized")
+            LOGGER.info("db initialized")
         except Exception as error:
-            self.LOGGER.warn("Could not init mongo db client: %s" % error)
+            LOGGER.warn("Could not init mongo db client: %s" % error)
 
     def create_indexes(self, collection_name):
         """
@@ -65,7 +67,7 @@ class Persister:
         parsed_message['metadata']['timestamp'] = int(time.time() * 1000)
         parsed_message['metadata']['deviceid'] = data['data']['id']
         parsed_message['metadata']['tenant'] = data['meta']['service']
-        self.LOGGER.info("new message is: %s" % parsed_message)
+        LOGGER.info("new message is: %s" % parsed_message)
         return json.dumps(parsed_message)
 
     def parse_datetime(self, timestamp):
@@ -83,11 +85,11 @@ class Persister:
                 return datetime.utcfromtimestamp(val/1000)
             return datetime.utcfromtimestamp(float(timestamp))
         except ValueError as error:
-            self.LOGGER.error("Failed to parse timestamp ({})\n{}".format(timestamp, error))
+            LOGGER.error("Failed to parse timestamp ({})\n{}".format(timestamp, error))
         try:
             return datetime.utcfromtimestamp(float(timestamp)/1000)
         except ValueError as error:
-            self.LOGGER.error("Failed to parse timestamp ({})\n{}".format(timestamp, error))
+            LOGGER.error("Failed to parse timestamp ({})\n{}".format(timestamp, error))
         try:
             return parse(timestamp)
         except TypeError as error:
@@ -106,18 +108,18 @@ class Persister:
         data = None
         try:
             data = json.loads(message)
-            self.LOGGER.info("THIS IS THE DATA: %s" % data)
+            LOGGER.info("THIS IS THE DATA: %s" % data)
         except Exception as error:
-            self.LOGGER.error('Received event is not valid JSON. Ignoring\n%s', error)
+            LOGGER.error('Received event is not valid JSON. Ignoring\n%s', error)
             return
-        self.LOGGER.debug('got data event %s', message)
+        LOGGER.debug('got data event %s', message)
         metadata = data.get('metadata', None)
         if metadata is None:
-            self.LOGGER.error('Received event has no metadata associated with it. Ignoring')
+            LOGGER.error('Received event has no metadata associated with it. Ignoring')
             return
         device_id = metadata.get('deviceid', None)
         if device_id is None:
-            self.LOGGER.error('Received event cannot be traced to a valid device. Ignoring')
+            LOGGER.error('Received event cannot be traced to a valid device. Ignoring')
             return
         timestamp = self.parse_datetime(metadata.get('timestamp', None))
         docs = []
@@ -141,9 +143,9 @@ class Persister:
                 collection_name = "{}_{}".format(tenant,device_id)
                 self.db[collection_name].insert_many(docs)
             except Exception as error:
-                self.LOGGER.warn('Failed to persist received information.\n%s', error)
+                LOGGER.warn('Failed to persist received information.\n%s', error)
         else:
-            self.LOGGER.info('Got empty event from device [%s] - ignoring', device_id)
+            LOGGER.info('Got empty event from device [%s] - ignoring', device_id)
 
     def handle_event_devices(self, tenant, message):
         """
@@ -157,7 +159,7 @@ class Persister:
             :param message Device lifecyle message, as produced by device manager
         """
         data = json.loads(message)
-        self.LOGGER.info('got device event %s', data)
+        LOGGER.info('got device event %s', data)
         if data['event'] == 'device.create' or data['event'] == 'device.update':
             collection_name = "{}_{}".format(data['meta']['service'], data['data']['id'])
             self.create_indexes(collection_name)
@@ -172,14 +174,17 @@ def main():
     and device-data topics and add callbacks to events related to that subjects
     """
     config = Config()
+    LOGGER.debug("Initializing persister...")
     persister = Persister()
     persister.init_mongodb()
+    LOGGER.debug("... persister was successfully initialized.")
+    LOGGER.debug("Initializing dojot messenger...")
     messenger = Messenger("Persister",config)
     messenger.init()
     messenger.create_channel(config.dojot['subjects']['devices'], "r")
     messenger.create_channel(config.dojot['subjects']['device_data'], "r")
     messenger.on(config.dojot['subjects']['devices'], "message", persister.handle_event_devices)
     messenger.on(config.dojot['subjects']['device_data'], "message", persister.handle_event_data)
-
+    LOGGER.debug("... dojot messenger was successfully initialized.")
 if __name__=="__main__":
     main()
