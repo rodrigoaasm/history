@@ -110,7 +110,7 @@ class Persister:
             data = json.loads(message)
             LOGGER.info("Received data: %s" % data)
         except Exception as error:
-            LOGGER.error('Received event is not valid JSON. Ignoring\n%s', error)
+            LOGGER.error('Received event is not valid JSON. Ignoring.\n%s', error)
             return
         LOGGER.debug('got data event %s', message)
         metadata = data.get('metadata', None)
