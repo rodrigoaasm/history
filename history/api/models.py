@@ -79,11 +79,11 @@ class HistoryUtil(object):
         return HistoryUtil.db['device_history']
 
     @staticmethod
-    def get_collection(service, device_id):
+    def get_collection(service, item):
         db = HistoryUtil.get_db()
-        collection_name = "%s_%s" % (service, device_id)
+        collection_name = "%s_%s" % (service, item)
         if collection_name in db.collection_names():
-            return db["%s_%s" % (service, device_id)]
+            return db["%s_%s" % (service, item)]
         else:
             raise falcon.HTTPNotFound(title="Device not found",
                                       description="No data for the given device could be found")
@@ -180,6 +180,19 @@ class DeviceHistory(object):
 
         resp.status = falcon.HTTP_200
         resp.body = json.dumps(history)
+
+class NotificationHistory(object):
+
+    @staticmethod
+    def on_get(req, resp):
+        logger.info(f"req is: {req}")
+        collection = HistoryUtil.get_collection(req.context['related_service'], "notifications")
+        
+        if req.params.keys():
+            logger.info("Will filter notifications")
+            
+
+
 
 class STHHistory(object):
     """ Deprecated: implements STH's NGSI-like historical view of data """
