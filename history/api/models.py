@@ -203,23 +203,18 @@ class NotificationHistory(object):
 
     @staticmethod
     def get_query(filter):
+        logger.info(f"filter: {filter}")
         query = {}
 
         if(len(filter)):
             for field in filter.keys():
-                value = filter[field][1]
-                condition = filter[field][0]
+                value = filter[field][0]
 
                 if(field != "subject"):
                     value = int(value)
                     field = "metaAttrsFilter." + field
 
-                query[field] = {}
-
-                if(condition != 'eq'):
-                    query[field]['$' + condition] = value
-                else:
-                    query[field] = value 
+                query[field] = value 
 
         sort = [('ts', pymongo.DESCENDING)]
         ls_filter = {"_id" : False, '@timestamp': False, '@version': False}
