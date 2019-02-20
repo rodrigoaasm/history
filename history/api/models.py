@@ -185,11 +185,58 @@ class NotificationHistory(object):
 
     @staticmethod
     def on_get(req, resp):
-        logger.info(f"req is: {req}")
+        """
+        Handles get method
+        """
         collection = HistoryUtil.get_collection(req.context['related_service'], "notifications")
+        history = {}
+        logger.info("Will retrieve notifications")
+        filter = req.params
+        query = NotificationHistory.get_query(filter)      
+        history['notifications'] = NotificationHistory.get_notifications(collection, query)
+        if(not len(history['notifications'])):
+            msg = "There aren't notifications for this tenant on this filter"
+            raise falcon.HTTPNotFound(title="Notifications not found", description=msg)
+
+        resp.status = falcon.HTTP_200
+        resp.body = json.dumps(history)
+
+    @staticmethod
+    def get_query(filter):
+        query = {}
+
+        if(len(filter)):
+            for field in filter.keys():
+                value = filter[field][1]
+                condition = filter[field][0]
+
+                if(field != "subject"):
+                    value = int(value)
+                    field = "metaAttrsFilter." + field
+
+                query[field] = {}
+
+                if(condition != 'eq'):
+                    query[field]['$' + condition] = value
+                else:
+                    query[field] = value 
+
+        sort = [('ts', pymongo.DESCENDING)]
+        ls_filter = {"_id" : False, '@timestamp': False, '@version': False}
+
+        return {"query": query, "limit_val": 10, "sort": sort, "filter": ls_filter}
+    
+    @staticmethod
+    def get_notifications(collection, query):
+        docs = collection.find(query['query'], query['filter'], limit=query['limit_val'], sort=query['sort'])
+
+        history = []
+        for d in docs:
+            d['ts'] = d['ts'].isoformat() + 'Z'
+            history.append(d)
+
+        return history
         
-        if req.params.keys():
-            logger.info("Will filter notifications")
             
 
 
