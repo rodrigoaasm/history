@@ -203,12 +203,11 @@ class NotificationHistory(object):
 
     @staticmethod
     def get_query(filter):
-        logger.info(f"filter: {filter}")
         query = {}
 
         if(len(filter)):
             for field in filter.keys():
-                value = filter[field][0]
+                value = filter[field]
 
                 if(field != "subject"):
                     value = int(value)
