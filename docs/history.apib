@@ -222,3 +222,39 @@ Gets the raw data stored by the STH since certain date backwards (or the current
                     }
                 ]
 }
+
+
+## Retrieving notifications [/notifications/history?{field}={value}]
+
++ Parameters
+    + field: subject (optional, string) - Wich field of the notifications will be filtered. If the field is in the metaAttrsFilter key, just pass the key itself.
+    + value: "debug" (optional, string) - Value that will be compared in the filter. If the value type is a string, pass it as "value", if it is int, pass it normally.
+
+### Get notifications from a tenant [GET]
++ Request (application/json)
+
+    + header
+
+            Authorization: Bearer JWT
+
++ Response 200 (application/json; charset=UTF-8)
+
+    + body
+
+            {
+                "notifications": [
+                    {
+                        "msgID": "12345",
+                        "metaAttrsFilter": {
+                        "level": 3,
+                        "shouldPersist": true
+                    },
+                    "message": "DEU ALGUMA COISA MUITO ERRADO",
+                    "subject": "debug",
+                    "ts": "2019-02-20T17:17:52.863000Z"
+                    }
+                ]
+}
+
+
+            
