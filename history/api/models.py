@@ -5,7 +5,7 @@ Exposes device information using dojot's modelling
 import json
 import base64
 import logging
-
+import re
 import dateutil.parser
 import falcon
 import pymongo
@@ -87,6 +87,25 @@ class HistoryUtil(object):
         else:
             raise falcon.HTTPNotFound(title="Device not found",
                                       description="No data for the given device could be found")
+    
+    @staticmethod
+    def check_type(arg):
+        logger.debug(arg)
+        res = re.search(r'^".*"$', arg)
+        if(res): #its a string
+            return "string"
+        return "int"
+
+    @staticmethod
+    def model_value(value, type):
+        if(type == "int"):
+            return int(value)
+        elif(type == "string"):
+            ret = ""
+            for l in value:
+                if l != '"':
+                    ret = ret + l
+            return ret
 
 class DeviceHistory(object):
     """Service used to retrieve a given device historical data"""
@@ -204,14 +223,14 @@ class NotificationHistory(object):
     @staticmethod
     def get_query(filter):
         query = {}
-
         if(len(filter)):
             for field in filter.keys():
                 value = filter[field]
 
                 if(field != "subject"):
-                    value = int(value)
                     field = "metaAttrsFilter." + field
+                
+                value = HistoryUtil.model_value(value, HistoryUtil.check_type(value)) 
 
                 query[field] = value 
 
@@ -230,10 +249,6 @@ class NotificationHistory(object):
             history.append(d)
 
         return history
-        
-            
-
-
 
 class STHHistory(object):
     """ Deprecated: implements STH's NGSI-like historical view of data """
