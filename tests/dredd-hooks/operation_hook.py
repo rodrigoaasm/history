@@ -56,8 +56,5 @@ def setup(transaction):
         "message": "DEU ALGUMA COISA MUITO ERRADO",
         "subject": "debug"
     }
-    try:
-        persister.handle_notification("admin", json.dumps(_notification))
-        
-    except Exception as error:
-        print("\n\n\n\nAAAAA\n\n\n\n")
+    
+    persister.handle_notification("admin", json.dumps(_notification))

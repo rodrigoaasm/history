@@ -97,10 +97,10 @@ class HistoryUtil(object):
         return "int"
 
     @staticmethod
-    def model_value(value, type):
-        if(type == "int"):
+    def model_value(value, type_arg):
+        if(type_arg == "int"):
             return int(value)
-        elif(type == "string"):
+        elif(type_arg == "string"):
             ret = ""
             for l in value:
                 if l != '"':
@@ -210,10 +210,10 @@ class NotificationHistory(object):
         collection = HistoryUtil.get_collection(req.context['related_service'], "notifications")
         history = {}
         logger.info("Will retrieve notifications")
-        filter = req.params
-        query = NotificationHistory.get_query(filter)      
+        filter_query = req.params
+        query = NotificationHistory.get_query(filter_query)      
         history['notifications'] = NotificationHistory.get_notifications(collection, query)
-        if(not len(history['notifications'])):
+        if(not history['notifications']):
             msg = "There aren't notifications for this tenant on this filter"
             raise falcon.HTTPNotFound(title="Notifications not found", description=msg)
 
@@ -221,11 +221,11 @@ class NotificationHistory(object):
         resp.body = json.dumps(history)
 
     @staticmethod
-    def get_query(filter):
+    def get_query(filter_query):
         query = {}
-        if(len(filter)):
-            for field in filter.keys():
-                value = filter[field]
+        if(filter_query):
+            for field in filter_query.keys():
+                value = filter_query[field]
 
                 if(field != "subject"):
                     field = "metaAttrsFilter." + field
