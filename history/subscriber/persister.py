@@ -135,14 +135,6 @@ class Persister:
                 'ts': timestamp,
                 'metadata': metadata
             })
-        # Persist device status history as well
-        device_status = metadata.get('status', None)
-        if device_status is not None:
-            docs.append({
-                'status': device_status,
-                'device_id': device_id,
-                'ts': timestamp
-            })
         if docs:
             try:
                 collection_name = "{}_{}".format(tenant,device_id)
