@@ -191,15 +191,18 @@ class Persister:
             LOGGER.debug(f"Invalid JSON: {error}")
         notification['ts'] = self.parse_datetime(notification.get("timestamp"))
         del notification['timestamp']
-        if(notification['metaAttrsFilter']['shouldPersist']):
-            LOGGER.debug("Notification should be persisted.")
-            try:
-                collection_name = "{}_{}".format(tenant,"notifications")
-                self.db[collection_name].insert_one(notification)
-            except Exception as error:
-                LOGGER.debug(f"Failed to persist notification:\n{error}")
-        else:
+        if('shouldPersist' in notification['metaAttrsFilter']):
+            if(notification['metaAttrsFilter']['shouldPersist']):
+                LOGGER.debug("Notification should be persisted.")
+                try:
+                    collection_name = "{}_{}".format(tenant,"notifications")
+                    self.db[collection_name].insert_one(notification)
+                except Exception as error:
+                    LOGGER.debug(f"Failed to persist notification:\n{error}")
+            else:
                 LOGGER.debug(f"Notification should not be persisted. Discarding it.")
+        else:
+            LOGGER.debug(f"Notification should not be persisted. Discarding it.")
 
 
 
