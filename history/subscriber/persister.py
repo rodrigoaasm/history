@@ -42,12 +42,12 @@ class Persister:
         """
         self.db[collection_name].create_index([('ts', pymongo.DESCENDING)])
         self.db[collection_name].create_index('ts', expireAfterSeconds=conf.db_expiration)
-    
+
     def create_indexes_for_notifications(self, tenants):
         LOGGER.debug(f"Creating indexes for tenants: {tenants}")
         for tenant in tenants:
             self.create_index_for_tenant(tenant)
-    
+
     def create_index_for_tenant(self, tenant):
         collection_name = "{}_{}".format(tenant, "notifications")
         self.create_indexes(collection_name)
@@ -189,6 +189,7 @@ class Persister:
             LOGGER.debug(f"Received a notification: {notification}. Will check if it will be persisted.")
         except Exception as error:
             LOGGER.debug(f"Invalid JSON: {error}")
+            return
         notification['ts'] = self.parse_datetime(notification.get("timestamp"))
         del notification['timestamp']
         if('shouldPersist' in notification['metaAttrsFilter']):
