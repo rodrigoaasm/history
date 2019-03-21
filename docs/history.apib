@@ -66,7 +66,7 @@ This path will retrieve all data from all device's attributes, unless a paramete
 
               {
                 "protocol": [],
-                "temperature": 
+                "temperature":
                 [
                     {
                         "device_id": "labtemp",
@@ -107,7 +107,7 @@ This path will retrieve all data from all device's attributes, unless a paramete
                 ]
               }
 
-            
+
 
 ## Filtering by offset and limit [/STH/v1/contextEntities/type/{device_type}/id/{device_id}/attributes/{attr}?hLimit={hLimit}&dateFrom={dateFrom}&dateTo={dateTo}]
 Gets the raw data stored by the STH from certain date onwards (or the origin of time if no starting date is provided) applying certain offset and a limit to the number of entries to be retrieved. Makes it possible to paginate over the stored raw data.
@@ -227,7 +227,7 @@ Gets the raw data stored by the STH since certain date backwards (or the current
 ## Retrieving notifications [/notifications/history?{field}={value}]
 
 + Parameters
-    + field: subject (optional, string) - Wich field of the notifications will be filtered. If the field is in the metaAttrsFilter key, just pass the key itself.
+    + field: subject (optional, string) - Which field of the notifications will be filtered. If the field is in the metaAttrsFilter key, just pass the key itself.
     + value: "debug" (optional, string) - Value that will be compared in the filter. If the value type is a string, pass it as "value", if it is int, pass it normally.
 
 ### Get notifications from a tenant [GET]
@@ -249,7 +249,7 @@ Gets the raw data stored by the STH since certain date backwards (or the current
                         "level": 3,
                         "shouldPersist": true
                     },
-                    "message": "DEU ALGUMA COISA MUITO ERRADO",
+                    "message": "Something went wrong.",
                     "subject": "debug",
                     "ts": "2019-02-20T17:17:52.863000Z"
                     }
@@ -257,4 +257,3 @@ Gets the raw data stored by the STH since certain date backwards (or the current
 }
 
 
-            
