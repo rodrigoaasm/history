@@ -5,7 +5,7 @@ import pymongo
 from datetime import datetime
 from dateutil.parser import parse
 from history import conf
-from dojot.module import Messenger, Config
+from dojot.module import Messenger, Config, Auth
 from dojot.module.logger import Log
 
 LOGGER = Log().color_log()
@@ -42,6 +42,16 @@ class Persister:
         """
         self.db[collection_name].create_index([('ts', pymongo.DESCENDING)])
         self.db[collection_name].create_index('ts', expireAfterSeconds=conf.db_expiration)
+
+    def create_indexes_for_notifications(self, tenants):
+        LOGGER.debug(f"Creating indexes for tenants: {tenants}")
+        for tenant in tenants:
+            self.create_index_for_tenant(tenant)
+
+    def create_index_for_tenant(self, tenant):
+        collection_name = "{}_{}".format(tenant, "notifications")
+        self.create_indexes(collection_name)
+
 
     def enable_collection_sharding(self, collection_name):
         """
@@ -167,6 +177,35 @@ class Persister:
             new_message = self.parse_message(data)
             self.handle_event_data(tenant, new_message)
 
+    def handle_new_tenant(self, tenant, message):
+        data = json.loads(message)
+        new_tenant = data['tenant']
+        LOGGER.debug(f"Received a new tenant: {new_tenant}. Will create index for it.")
+        self.create_index_for_tenant(new_tenant)
+
+    def handle_notification(self, tenant, message):
+        try:
+            notification = json.loads(message)
+            LOGGER.debug(f"Received a notification: {notification}. Will check if it will be persisted.")
+        except Exception as error:
+            LOGGER.debug(f"Invalid JSON: {error}")
+            return
+        notification['ts'] = self.parse_datetime(notification.get("timestamp"))
+        del notification['timestamp']
+        if('shouldPersist' in notification['metaAttrsFilter']):
+            if(notification['metaAttrsFilter']['shouldPersist']):
+                LOGGER.debug("Notification should be persisted.")
+                try:
+                    collection_name = "{}_{}".format(tenant,"notifications")
+                    self.db[collection_name].insert_one(notification)
+                except Exception as error:
+                    LOGGER.debug(f"Failed to persist notification:\n{error}")
+            else:
+                LOGGER.debug(f"Notification should not be persisted. Discarding it.")
+        else:
+            LOGGER.debug(f"Notification should not be persisted. Discarding it.")
+
+
 
 def main():
     """
@@ -174,17 +213,24 @@ def main():
     and device-data topics and add callbacks to events related to that subjects
     """
     config = Config()
+    auth = Auth(config)
     LOGGER.debug("Initializing persister...")
     persister = Persister()
     persister.init_mongodb()
+    persister.create_indexes_for_notifications(auth.get_tenants())
     LOGGER.debug("... persister was successfully initialized.")
     LOGGER.debug("Initializing dojot messenger...")
     messenger = Messenger("Persister",config)
     messenger.init()
     messenger.create_channel(config.dojot['subjects']['devices'], "r")
     messenger.create_channel(config.dojot['subjects']['device_data'], "r")
+    # TODO: add notifications to config on dojot-module-python
+    messenger.create_channel("dojot.notifications", "r")
     messenger.on(config.dojot['subjects']['devices'], "message", persister.handle_event_devices)
     messenger.on(config.dojot['subjects']['device_data'], "message", persister.handle_event_data)
+    messenger.on(config.dojot['subjects']['tenancy'], "message", persister.handle_new_tenant)
+    messenger.on("dojot.notifications", "message", persister.handle_notification)
     LOGGER.debug("... dojot messenger was successfully initialized.")
+
 if __name__=="__main__":
     main()
