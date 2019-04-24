@@ -5,7 +5,7 @@ Exposes device information using dojot's modelling
 import json
 import base64
 import logging
-
+import re
 import dateutil.parser
 import falcon
 import pymongo
@@ -79,14 +79,33 @@ class HistoryUtil(object):
         return HistoryUtil.db['device_history']
 
     @staticmethod
-    def get_collection(service, device_id):
+    def get_collection(service, item):
         db = HistoryUtil.get_db()
-        collection_name = "%s_%s" % (service, device_id)
+        collection_name = "%s_%s" % (service, item)
         if collection_name in db.collection_names():
-            return db["%s_%s" % (service, device_id)]
+            return db["%s_%s" % (service, item)]
         else:
             raise falcon.HTTPNotFound(title="Device not found",
                                       description="No data for the given device could be found")
+    
+    @staticmethod
+    def check_type(arg):
+        logger.debug(arg)
+        res = re.search(r'^".*"$', arg)
+        if(res): #its a string
+            return "string"
+        return "int"
+
+    @staticmethod
+    def model_value(value, type_arg):
+        if(type_arg == "int"):
+            return int(value)
+        elif(type_arg == "string"):
+            ret = ""
+            for l in value:
+                if l != '"':
+                    ret = ret + l
+            return ret
 
 class DeviceHistory(object):
     """Service used to retrieve a given device historical data"""
@@ -180,6 +199,56 @@ class DeviceHistory(object):
 
         resp.status = falcon.HTTP_200
         resp.body = json.dumps(history)
+
+class NotificationHistory(object):
+
+    @staticmethod
+    def on_get(req, resp):
+        """
+        Handles get method
+        """
+        collection = HistoryUtil.get_collection(req.context['related_service'], "notifications")
+        history = {}
+        logger.info("Will retrieve notifications")
+        filter_query = req.params
+        query = NotificationHistory.get_query(filter_query)      
+        history['notifications'] = NotificationHistory.get_notifications(collection, query)
+        if(not history['notifications']):
+            msg = "There aren't notifications for this tenant on this filter"
+            raise falcon.HTTPNotFound(title="Notifications not found", description=msg)
+
+        resp.status = falcon.HTTP_200
+        resp.body = json.dumps(history)
+
+    @staticmethod
+    def get_query(filter_query):
+        query = {}
+        if(filter_query):
+            for field in filter_query.keys():
+                value = filter_query[field]
+
+                if(field != "subject"):
+                    field = "metaAttrsFilter." + field
+                
+                value = HistoryUtil.model_value(value, HistoryUtil.check_type(value)) 
+
+                query[field] = value 
+
+        sort = [('ts', pymongo.DESCENDING)]
+        ls_filter = {"_id" : False, '@timestamp': False, '@version': False}
+
+        return {"query": query, "limit_val": 10, "sort": sort, "filter": ls_filter}
+    
+    @staticmethod
+    def get_notifications(collection, query):
+        docs = collection.find(query['query'], query['filter'], limit=query['limit_val'], sort=query['sort'])
+
+        history = []
+        for d in docs:
+            d['ts'] = d['ts'].isoformat() + 'Z'
+            history.append(d)
+
+        return history
 
 class STHHistory(object):
     """ Deprecated: implements STH's NGSI-like historical view of data """

@@ -4,7 +4,7 @@ import json
 from history.subscriber.persister import Persister
 
 @hooks.before_each
-def create__device(transaction):
+def setup(transaction):
 
     _create_device = {
         "event": "create",
@@ -39,3 +39,23 @@ def create__device(transaction):
 
     _update_data['attrs']['temperature'] = "23.12"
     persister.handle_event_data("admin", json.dumps(_update_data))
+
+
+    _new_tenant = {
+        "tenant": "admin"
+    }
+
+    persister.handle_new_tenant("admin", json.dumps(_new_tenant))
+
+    _notification = {
+        "msgID": "12345",
+        "timestamp": 1551111524,
+        "metaAttrsFilter": {
+            "level": 1,
+            "shouldPersist": "True"
+        },
+        "message": "DEU ALGUMA COISA MUITO ERRADO",
+        "subject": "debug"
+    }
+    
+    persister.handle_notification("admin", json.dumps(_notification))
