@@ -131,22 +131,19 @@ class Persister:
         if device_id is None:
             LOGGER.error('Received event cannot be traced to a valid device. Ignoring')
             return
+        del metadata['deviceid']
         timestamp = self.parse_datetime(metadata.get('timestamp', None))
+        del metadata['timestamp']
+        if metadata.get('tenant', None) != None:
+            del metadata['tenant']
         docs = []
         for attr in data.get('attrs', {}).keys():
             docs.append({
                 'attr': attr,
                 'value': data['attrs'][attr],
                 'device_id': device_id,
-                'ts': timestamp
-            })
-        # Persist device status history as well
-        device_status = metadata.get('status', None)
-        if device_status is not None:
-            docs.append({
-                'status': device_status,
-                'device_id': device_id,
-                'ts': timestamp
+                'ts': timestamp,
+                'metadata': metadata
             })
         if docs:
             try:

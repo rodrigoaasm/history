@@ -28,7 +28,8 @@ def setup(transaction):
         "metadata": {
             "deviceid": "labtemp",
             "protocol": "mqtt",
-            "payload": "json"
+            "payload": "json",
+            "timestamp": 1528226137452
         },
         "attrs": {
             "temperature": "22.12"
