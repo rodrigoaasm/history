@@ -139,22 +139,25 @@ class Persister:
         if metadata.get('tenant', None) != None:
             del metadata['tenant']
         docs = []
-        for attr in data.get('attrs', {}).keys():
-            docs.append({
-                'attr': attr,
-                'value': data['attrs'][attr],
-                'device_id': device_id,
-                'ts': timestamp,
-                'metadata': metadata
-            })
-        if docs:
-            try:
-                collection_name = "{}_{}".format(tenant,device_id)
-                self.db[collection_name].insert_many(docs)
-            except Exception as error:
-                LOGGER.warn('Failed to persist received information.\n%s', error)
+        if type(data["attrs"]) is dict:
+            for attr in data.get('attrs', {}).keys():
+                docs.append({
+                    'attr': attr,
+                    'value': data['attrs'][attr],
+                    'device_id': device_id,
+                    'ts': timestamp,
+                    'metadata': metadata
+                })
+            if docs:
+                try:
+                    collection_name = "{}_{}".format(tenant,device_id)
+                    self.db[collection_name].insert_many(docs)
+                except Exception as error:
+                    LOGGER.warn('Failed to persist received information.\n%s', error)
         else:
-            LOGGER.info('Got empty event from device [%s] - ignoring', device_id)
+            LOGGER.warning(f"Expected attribute dictionary, got {type(data.attr)}")
+            LOGGER.warning("Bailing out")
+
 
     def handle_event_devices(self, tenant, message):
         """
