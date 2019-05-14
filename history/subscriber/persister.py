@@ -74,7 +74,12 @@ class Persister:
         parsed_message = dict()
         parsed_message['attrs'] = data['data']['attrs']
         parsed_message['metadata'] = dict()
-        parsed_message['metadata']['timestamp'] = int(time.time() * 1000)
+
+        if data['meta']['timestamp'] is None:
+             parsed_message['metadata']['timestamp'] = int(time.time() * 1000)
+        else:
+             parsed_message['metadata']['timestamp'] = data['meta']['timestamp']
+       
         parsed_message['metadata']['deviceid'] = data['data']['id']
         parsed_message['metadata']['tenant'] = data['meta']['service']
         LOGGER.info("new message is: %s" % parsed_message)
