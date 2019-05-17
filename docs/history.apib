@@ -2,16 +2,26 @@ FORMAT: 1A
 HOST: http://localhost:8000
 
 # History
-The raw data stored in the STH can be consumed in the following ways:
+This service is intended to provide an easy way to consume data associated to
+device attributes, such as temperature readinds, and notifications sent by
+other services.
 
-## Filter data by last N values of an attribute [/device/{device_id}/history?lastN={lastN}&attr={attr}]
-This path gets the last N values of the attributes' history. Also, another attributes can be passed as: &attr=attr1,attr2,...,attrN
+
+## Retrieve data from attributes [/device/{device_id}/history?lastN={lastN}&attr={attr}&dateFrom={dateFrom}&dateTo={dateTo}]
+
+This endpoint retrieves the last values associated to a device. The query
+string might select more than one attribute. For instance:
+`?lastN=3&attr=temperature,pressure` will return the last 3 values from both
+`temperature` and `pressure` attributes.
+
+If no query string is set, then all values from all attributes are returned.
 
 + Parameters
-    + device_id:labtemp (required, string) - Identifier of the entity whose associated raw data wants to be retrieved.
-    + attr:temperature (required, string) - Name of the attribute whose associated raw data wants to be retrieved.
-    + lastN:3 (optional, number) - Last number of values for this attribute (attr)
-      + Default: 1
+    + device_id:labtemp (required, string) - Device identifier
+    + attr:temperature (optional, string) - Device attribute to be
+    + dateFrom:`2018-06-05T18:00:00Z` (optional, string) - Start time of a time-based query
+    + dateTo:`2018-06-15T18:00:00Z` (optional, string) - End time of a time-based query
+    + lastN:3 (optional, number) - Number of most current values (valid for each attribute, if more than one)
 
 ### Filter by last N values and attribute [GET]
 + Request (application/json)
@@ -27,204 +37,40 @@ This path gets the last N values of the attributes' history. Also, another attri
               {
                 "device_id": "labtemp",
                 "ts": "2014-02-14T13:43:33.306Z",
+                "metadata": {
+                    "protocol": "mqtt",
+                    "payload": "json"
+                },
                 "value": "22.12",
                 "attr": "temperature"
               },
               {
                 "device_id": "labtemp",
                 "ts": "2014-02-14T13:42:33.306Z",
+                "metadata": {
+                    "protocol": "mqtt",
+                    "payload": "json"
+                },
                 "value": "23.12",
                 "attr": "temperature"
               },
               {
                 "device_id": "labtemp",
                 "ts": "2014-02-14T13:41:33.306Z",
+                "metadata": {
+                    "protocol": "mqtt",
+                    "payload": "json"
+                },
                 "value": "24.10",
                 "attr": "temperature"
               }
             ]
 
-## Retrieves all data from history [/device/{device_id}/history]
-This path will retrieve all data from all device's attributes, unless a parameter is given.
-
-+ Parameters
-    + device_id:labtemp (required, string) - Identifier of the entity whose associated raw data wants to be retrieved.
-    + attr:none (optional, string) - Name of the attribute whose associated raw data wants to be retrieved. If not provided, will consider all attributes.
-    + lastN:none (optional, number) - Maximum number of raw data entries to retrieve. If not provided, will return all data entries of the attributes.
-    + dateFrom:none(optional, date) - The starting date from which the raw data should be retrieved. If not provided, the origin of time is used.
-    + dateTo:none (optional, date) - The final date until which the raw data should be retrieved. If not provided, the current date is used.
-
-### Retrieve all data from device [GET]
-+ Request (application/json)
-  + Headers
-
-            Authorization: Bearer JWT
-
-+ Response 200 (application/json; charset=UTF-8)
-
-  + body
-
-              {
-                "protocol": [],
-                "temperature":
-                [
-                    {
-                        "device_id": "labtemp",
-                        "ts": "2014-02-14T13:43:33.306Z",
-                        "value": "22.12",
-                        "attr": "temperature"
-                    },
-                    {
-                        "device_id": "labtemp",
-                        "ts": "2014-02-14T13:42:33.306Z",
-                        "value": "22.12",
-                        "attr": "temperature"
-                    },
-                    {
-                        "device_id": "labtemp",
-                        "ts": "2014-02-14T13:41:33.306Z",
-                        "value": "22.12",
-                        "attr": "temperature"
-                    },
-                    {
-                        "device_id": "labtemp",
-                        "ts": "2014-02-14T13:40:33.306Z",
-                        "value": "22.12",
-                        "attr": "temperature"
-                    },
-                    {
-                        "device_id": "labtemp",
-                        "ts": "2014-02-14T13:39:33.306Z",
-                        "value": "22.12",
-                        "attr": "temperature"
-                    },
-                    {
-                        "device_id": "labtemp",
-                        "ts": "2014-02-14T13:38:33.306Z",
-                        "value": "22.12",
-                        "attr": "temperature"
-                    }
-                ]
-              }
-
-
-
-## Filtering by offset and limit [/STH/v1/contextEntities/type/{device_type}/id/{device_id}/attributes/{attr}?hLimit={hLimit}&dateFrom={dateFrom}&dateTo={dateTo}]
-Gets the raw data stored by the STH from certain date onwards (or the origin of time if no starting date is provided) applying certain offset and a limit to the number of entries to be retrieved. Makes it possible to paginate over the stored raw data.
-
-+ Parameters
-    + device_type:termometer (required, string) - Type of the entity whose associated raw data wants to be retrieved.
-    + device_id:labtemp (required, string) - Identifier of the entity whose associated raw data wants to be retrieved.
-    + attr:temperature (required, string) - Name of the attribute whose associated raw data wants to be retrieved.
-    + hLimit:3 (optional, number) - Maximum number of raw data entries to retrieve.
-    + dateFrom:2015-01-01T00:00:00.000Z (optional, date) - The starting date from which the raw data should be retrieved. If not provided, the origin of time is used.
-    + dateTo:2015-12-31T23:59:59.999Z (optional, date) - The final date until which the raw data should be retrieved. If not provided, the current date is used.
-
-### Filter by offset and limit [GET]
-+ Request (application/json)
-
-    + header
-
-            Authorization: Bearer JWT
-
-+ Response 200 (application/json; charset=UTF-8)
-
-    + body
-
-            {
-                "contextResponses": [
-                    {
-                        "contextElement": {
-                            "attributes": [
-                                {
-                                    "name": "temperature",
-                                    "values": [
-                                        {
-                                            "recvTime": "2014-02-14T13:43:33.306Z",
-                                            "attrValue": "21.28"
-                                        },
-                                        {
-                                            "recvTime": "2014-02-14T13:43:34.636Z",
-                                            "attrValue": "23.42"
-                                        },
-                                        {
-                                            "recvTime": "2014-02-14T13:43:35.424Z",
-                                            "attrValue": "22.12"
-                                        }
-                                    ]
-                                }
-                            ],
-                            "id": "labtemp",
-                            "isPattern": false,
-                            "type": "termometer"
-                        },
-                        "statusCode": {
-                            "code": "200",
-                            "reasonPhrase": "OK"
-                        }
-                    }
-                ]
-            }
-
-## Filtering by number of last entries [/STH/v1/contextEntities/type/{device_type}/id/{device_id}/attributes/{attr}?lastN={lastN}&dateFrom={dateFrom}&dateTo={dateTo}]
-Gets the raw data stored by the STH since certain date backwards (or the current time if no final date is provided) limiting the number of results to be retrieved.
-
-+ Parameters
-    + device_type:termometer (required, string) - Type of the entity whose associated raw data wants to be retrieved.
-    + device_id:labtemp (required, string) - Identifier of the entity whose associated raw data wants to be retrieved.
-    + attr:temperature (required, string) - Name of the attribute whose associated raw data wants to be retrieved.
-    + lastN:5 (required, number) - Number of raw data entries to retrieve since the final date backwards.
-    + dateFrom:2015-01-01T00:00:00.000Z (optional, date) - The starting date from which the raw data should be retrieved. If not provided, the origin of time is used.
-    + dateTo:2015-12-31T23:59:59.999Z (optional, date) - The final date until which the raw data should be retrieved. If not provided, the current date is used.
-
-### Get raw data from STH [GET]
-+ Request (application/json)
-
-    + header
-
-            Authorization: Bearer JWT
-
-+ Response 200 (application/json; charset=UTF-8)
-
-    + body
-
-            {
-                "contextResponses": [
-                    {
-                        "contextElement": {
-                            "attributes": [
-                                {
-                                    "name": "temperature",
-                                    "values": [
-                                        {
-                                            "recvTime": "2014-02-14T13:43:33.306Z",
-                                            "attrValue": "21.28"
-                                        },
-                                        {
-                                            "recvTime": "2014-02-14T13:43:34.636Z",
-                                            "attrValue": "23.42"
-                                        },
-                                        {
-                                            "recvTime": "2014-02-14T13:43:35.424Z",
-                                            "attrValue": "22.12"
-                                        }
-                                    ]
-                                }
-                            ],
-                            "id": "labtemp",
-                            "isPattern": false,
-                            "type": "termometer"
-                        },
-                        "statusCode": {
-                            "code": "200",
-                            "reasonPhrase": "OK"
-                        }
-                    }
-                ]
-}
-
-
 ## Retrieving notifications [/notifications/history?{field}={value}]
+
+This endpoint retrieves all notifications generated by services. As each
+notification might have different attributes, it is possible to filter them
+and select only those needed by a particular application.
 
 + Parameters
     + field: subject (optional, string) - Which field of the notifications will be filtered. If the field is in the metaAttrsFilter key, just pass the key itself.
