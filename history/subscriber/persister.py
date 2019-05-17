@@ -138,7 +138,9 @@ class Persister:
             return
         del metadata['deviceid']
         timestamp = self.parse_datetime(metadata.get('timestamp', None))
-        del metadata['timestamp']
+        if "timestamp" in metadata:
+            del metadata['timestamp']
+
         if metadata.get('tenant', None) != None:
             del metadata['tenant']
         docs = []
