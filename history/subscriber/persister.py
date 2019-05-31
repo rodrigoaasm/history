@@ -160,7 +160,7 @@ class Persister:
                 except Exception as error:
                     LOGGER.warn('Failed to persist received information.\n%s', error)
         else:
-            LOGGER.warning(f"Expected attribute dictionary, got {type(data.attr)}")
+            LOGGER.warning(f"Expected attribute dictionary, got {type(data['attrs'])}")
             LOGGER.warning("Bailing out")
 
 
