@@ -53,6 +53,7 @@ docker run -i -t <tag-for-persister-docker>
 In order to properly start History, the following variables must be set. All
 values are the default ones, and they need to be modified to point at the services' address.
 
+```shell
 #####
 ## Config for History service
 #####
