@@ -29,7 +29,7 @@ MONGO_SHARD                 |                                                   
 AUTH_URL                    |Auth url address                                              |"http://auth:5000"
 KAFKA_ADDRESS               |Kafta address                                                 |"kafka"
 KAFKA_PORT                  |Kafka port                                                    |9092
-KAFKA_HOSTS                 |KAFKA_ADDRESS concatenated wiht KAFKA_PORT                    |"kafka:9092"
+KAFKA_HOSTS                 |KAFKA_ADDRESS concatenated with KAFKA_PORT                    |"kafka:9092"
 KAFKA_GROUP_ID              |Group ID used when creating consumers                         |"history"
 DATA_BROKER_URL             |Data Broker address                                           |"http://data-broker"
 DEVICE_MANAGER_URL          |Device Manager address                                        |"http://device-manager:5000"
@@ -96,8 +96,9 @@ For History service, just set all needed environment variables and execute:
 
 Persister is much simpler, just execute:
 ```bash
-#python -m history.subscriber.kafkaSubscriber
-$ python history/subscriber/persister.py
+$ python -m history.subscriber.kafkaSubscriber
+#if the above command doesn't work, try:
+# $ python history/subscriber/persister.py
 ```
 
 ## API
