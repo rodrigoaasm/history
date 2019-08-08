@@ -3,14 +3,27 @@
 This service handles all operations related to persisting and retrieving historical device
 data. For more information about the usage, check the [API documentation](https://dojot.github.io/history/apiary_latest.html).
 
+## About History
+
+The history service is used when a device historical data needs to be retrieved, but it can also be utilized via HTTP request 
+employing different filters, like deviceId, number of entries to be listed and starting date, as in the following example:
+
+```shell
+http://host:port/device/{device_id}/history?lastN={lastN}&attr={attr}&dateFrom={dateFrom}&dateTo={dateTo}
+```
+
+## About Persister
+
+The persister, as the name suggests, is the responsible for the persistence of the data sent from devices.
+
 ## Dependencies
 
-- falcon
-- gunicorn
-- gevent
-- python-dateutil
-- pymongo
-- requests
+- [falcon](https://falconframework.org/)
+- [gunicorn](https://gunicorn.org/)
+- [gevent](http://www.gevent.org/)
+- [python-dateutil](https://pypi.org/project/python-dateutil/1.4/)
+- [pymongo](https://pypi.org/project/pymongo/)
+- [requests](https://pypi.org/project/requests/)
 
 The setup of these dependencies are described in the following section.
 
@@ -25,7 +38,7 @@ HISTORY_DB_ADDRESS          |History database's address                         
 HISTORY_DB_PORT             |History database's port                                       |27017
 HISTORY_DB_REPLICA_SET      |History database's replica set address                        |None
 HISTORY_DB_DATA_EXPIRATION  |Seconds before removing an entry in MongoDB                   |604800
-MONGO_SHARD                 |                                                              |False
+MONGO_SHARD                 |Activate the use of sharding or not                           |False
 AUTH_URL                    |Auth url address                                              |"http://auth:5000"
 KAFKA_ADDRESS               |Kafta address                                                 |"kafka"
 KAFKA_PORT                  |Kafka port                                                    |9092
@@ -38,16 +51,18 @@ DOJOT_SUBJECT_DEVICES       |Global subject to use when receiving device lifecyc
 DOJOT_SUBJECT_DEVICE_DATA   |Global subject to use when receiving data from devices        |"device-data"
 DOJOT_SERVICE_MANAGEMENT    |Global service to use when publishing dojot management events |"dojot-management"
 
-## Installation
 
-### Standalone setup
+## How to install and run
+
+### Standalone install
 
 As this service is written in **Python 2.7**, it is recommended that all packages are
-installed within a [virtual environment](https://github.com/pypa/virtualenv). It can be created by:
+installed within a [virtual environment](https://github.com/pypa/virtualenv) that will be used by both services.
+It can be created by:
 
 ```shell
-$ virtualenv ./venv
-$ source ./venv/bin/activate
+virtualenv ./venv
+source ./venv/bin/activate
 ```
 
 Which will create a `venv` folder in current directory and install
@@ -58,35 +73,16 @@ To install all dependencies from Auth, execute the following commands.
 
 ```shell
 # you may need sudo for those
-$ apt-get install -y python-pip versiontools
+apt-get install -y python-pip versiontools
 # There is a package that is not in PyPI
-$ pip install -r ./requirements/requirements.txt
-$ python setup.py install
+pip install -r ./requirements/requirements.txt
+python setup.py install
 ```
 
 The last command will generate a .egg file and install it into your virtual
 environment.
 
-### Docker setup
-
-Another alternative is to use **docker** to run the service. To build the
-container, from the repository"s root:
-
-```shell
-# you may need sudo on your machine: 
-# https://docs.docker.com/engine/installation/linux/linux-postinstall/
-$ docker build -t <tag-for-history-docker> -f docker/history.docker .
-$ docker build -t <tag-for-persister-docker> -f docker/persister.docker .
-```
-You can run the built containers using the following commands:
-
-```shell
-# may need sudo to run
-$ docker run -i -t <tag-for-history-docker>
-$ docker run -i -t <tag-for-persister-docker>
-```
-
-## How to run
+#### Running the history service
 
 For History service, just set all needed environment variables and execute:
 
@@ -94,11 +90,31 @@ For History service, just set all needed environment variables and execute:
 ./docker/falcon-docker-entrypoint.sh start
 ```
 
-Persister is much simpler, just execute:
+#### Running the persistent service
+
+To run the Persistent, after setting the environment variables, execute:
+
 ```bash
-$ python -m history.subscriber.kafkaSubscriber
-#if the above command doesn't work, try:
-# $ python history/subscriber/persister.py
+python -m history.subscriber.persister
+```
+
+### Docker setup
+
+Another alternative is to use **docker** to run the service. To build the
+container, from the repository's root:
+
+```shell
+# you may need sudo on your machine: 
+# https://docs.docker.com/engine/installation/linux/linux-postinstall/
+docker build -t <tag-for-history-docker> -f docker/history.docker .
+docker build -t <tag-for-persister-docker> -f docker/persister.docker .
+```
+You can run the built containers using the following commands:
+
+```shell
+# may need sudo to run
+docker run -i -t <tag-for-history-docker>
+docker run -i -t <tag-for-persister-docker>
 ```
 
 ## API
