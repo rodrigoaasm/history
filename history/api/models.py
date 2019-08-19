@@ -4,25 +4,21 @@ Exposes device information using dojot's modelling
 """
 import json
 import base64
-import logging
 import re
 import dateutil.parser
 import falcon
 import pymongo
 import requests
+from history import conf, HistoryLog
 
-from history import conf
-
-logger = logging.getLogger('history.' + __name__)
-logger.addHandler(logging.StreamHandler())
-logger.setLevel(logging.DEBUG)
+logger = HistoryLog.HistoryLog(conf.log_level).color_log()
 
 class AuthMiddleware(object):
     """
         Middleware used to populate context with relevant JWT-sourced information.
         Also used to validate and refuse requests that do not contain valid tokens associated
         with them.
-    """
+    """     
 
     def process_request(self, req, resp):
         challenges = ['Token type="JWT"']
@@ -113,7 +109,6 @@ class DeviceHistory(object):
     @staticmethod
     def parse_request(request, attr):
         """ returns mongo compatible query object, based on the query params provided """
-
         if 'lastN' in request.params.keys():
             try:
                 limit_val = int(request.params['lastN'])
@@ -171,7 +166,7 @@ class DeviceHistory(object):
         
     @staticmethod
     def on_get(req, resp, device_id):  
-
+        logger.debug('entrou em on_get')
         collection = HistoryUtil.get_collection(req.context['related_service'], device_id)
 
         if 'attr' in req.params.keys():
