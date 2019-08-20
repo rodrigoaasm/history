@@ -9,9 +9,9 @@ import dateutil.parser
 import falcon
 import pymongo
 import requests
-from history import conf, HistoryLog
+from history import conf, serviceLog
 
-logger = HistoryLog.HistoryLog(conf.log_level).color_log()
+logger = serviceLog.Log(conf.log_level).color_log()
 
 class AuthMiddleware(object):
     """

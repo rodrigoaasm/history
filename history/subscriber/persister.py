@@ -4,16 +4,16 @@ import time
 import pymongo
 from datetime import datetime
 from dateutil.parser import parse
-from history import conf
+from history import conf, serviceLog
 from dojot.module import Messenger, Config, Auth
-from dojot.module.logger import Log
+#from dojot.module.logger import Log
 
-LOGGER = Log().color_log()
+LOGGER = serviceLog.Log(conf.log_level).color_log()
 
 class Persister:
 
     def __init__(self):
-        LOGGER = Log().color_log()
+        LOGGER = serviceLog.Log(conf.log_level).color_log()
         self.db = None
         self.client = None
 
@@ -226,8 +226,9 @@ def main():
     persister.init_mongodb()
     persister.create_indexes_for_notifications(auth.get_tenants())
     LOGGER.debug("... persister was successfully initialized.")
-    LOGGER.debug("Initializing dojot messenger...")
+    LOGGER.debug("Initializing dojot messenger...")     
     messenger = Messenger("Persister",config)
+    LOGGER.debug("Conf. dictionary: "+config)
     messenger.init()
     messenger.create_channel(config.dojot['subjects']['devices'], "r")
     messenger.create_channel(config.dojot['subjects']['device_data'], "r")

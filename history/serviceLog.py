@@ -4,12 +4,7 @@ import falcon
 from logging import config as config_log
 from colorlog import ColoredFormatter
 
-#endpoints
-from flask import Flask, request, jsonify, make_response
-
-app = Flask(__name__)
-
-class HistoryLog:
+class Log:
 
     def __init__(self, log_level=logging.DEBUG,
                  log_format="[%(log_color)s%(asctime)-8s%(reset)s] |%(log_color)s%(module)-8s%(reset)s| %(log_color)s%(levelname)s%(reset)s: %(log_color)s%(message)s%(reset)s", is_disabled=False):
@@ -64,11 +59,3 @@ class HistoryLog:
             # Endpoint part??
             #raise falcon.HTTPError(400, "Unknown level: {} valid are {}".format(LEVEL, levelToName))
             print("ERRO")
-    
-    @app.route("/loglevel", methods=['GET'])
-    def get_log_level(self):
-        return self.level
-    
-    @app.route('/logLevel', methods=['POST'])
-    def 
-    
