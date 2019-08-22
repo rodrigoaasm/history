@@ -4,14 +4,12 @@ Docker settings file
 """
 
 import os
-#import logging
+
 # This file contains the default configuration values
 # and configuration retrieval functions
 
-#LOGGER = logging.getLogger("history." + __name__)
-#LOGGER.addHandler(logging.StreamHandler())
-#LOGGER.setLevel(os.environ.get("LOG_LEVEL","INFO"))
-
+#Logger related configuration
+levelToName = dict([(50,'CRITICAL'), (40,'ERROR'), (30,'WARNING'), (20,'INFO'), (10,'DEBUG')])
 log_level = os.environ.get("LOG_LEVEL","DEBUG")
 
 # mongo related configuration

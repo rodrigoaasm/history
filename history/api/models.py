@@ -11,6 +11,7 @@ import pymongo
 import requests
 from history import conf, serviceLog
 
+
 logger = serviceLog.Log(conf.log_level).color_log()
 
 class AuthMiddleware(object):
@@ -165,8 +166,7 @@ class DeviceHistory(object):
         return history
         
     @staticmethod
-    def on_get(req, resp, device_id):  
-        logger.debug('entrou em on_get')
+    def on_get(req, resp, device_id):
         collection = HistoryUtil.get_collection(req.context['related_service'], device_id)
 
         if 'attr' in req.params.keys():
@@ -281,3 +281,25 @@ class STHHistory(object):
 
         resp.status = falcon.HTTP_200
         resp.body = json.dumps(ngsi_body)
+
+##Dealing with logs
+class LoggingInterface(object):
+    @staticmethod
+    def on_get(req, resp):
+        response = {"log_level": conf.levelToName[logger.level]}
+        resp.body = json.dumps(response)
+        resp.status = falcon.HTTP_200
+
+    @staticmethod
+    def on_post (req, resp):
+        logger.info('LoggingInterface.on_post')
+        logger.info('received level: '+ req.params['level'])
+        if 'level' in req.params.keys() and req.params['level'] in conf.levelToName.values():
+            logger.setLevel(req.params['level'])
+            response = {"new_log_level": conf.levelToName(logger.level)}
+            resp.body = json.dumps(response)
+            resp.status = falcon.HTTP_200
+        else:
+            resp.body = 'level must be valid!'
+            resp.status = falcon.HTTP_200
+        
