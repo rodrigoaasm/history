@@ -1,12 +1,12 @@
 import base64
 import json
+import falcon
 import time
 import pymongo
 from datetime import datetime
 from dateutil.parser import parse
 from history import conf, serviceLog
 from dojot.module import Messenger, Config, Auth
-#from dojot.module.logger import Log
 
 LOGGER = serviceLog.Log(conf.log_level).color_log()
 
@@ -228,7 +228,6 @@ def main():
     LOGGER.debug("... persister was successfully initialized.")
     LOGGER.debug("Initializing dojot messenger...")     
     messenger = Messenger("Persister",config)
-    LOGGER.debug("Conf. dictionary: "+config)
     messenger.init()
     messenger.create_channel(config.dojot['subjects']['devices'], "r")
     messenger.create_channel(config.dojot['subjects']['device_data'], "r")
@@ -242,3 +241,22 @@ def main():
 
 if __name__=="__main__":
     main()
+
+#Dealing with logging
+class LoggingInterface(object):
+    @staticmethod
+    def on_get(req,resp):
+        response = {"log_level": conf.levelToName[LOGGER.level]}
+        resp.body = json.dumps(response)
+        resp.status = falcon.HTTP_200
+
+
+    @staticmethod
+    def on_put(req,resp):
+        if 'level' in req.params.keys() and req.params['level'].upper() in conf.levelToName.values():
+            LOGGER.setLevel(req.params['level'])
+            response = {"new_log_level": conf.levelToName[LOGGER.level]}
+            resp.body = json.dumps(response)
+            resp.status = falcon.HTTP_200
+        else:
+            raise falcon.HTTPInvalidParam('logging level must be valid!','level')

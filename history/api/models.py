@@ -291,15 +291,14 @@ class LoggingInterface(object):
         resp.status = falcon.HTTP_200
 
     @staticmethod
-    def on_post (req, resp):
-        logger.info('LoggingInterface.on_post')
-        logger.info('received level: '+ req.params['level'])
-        if 'level' in req.params.keys() and req.params['level'] in conf.levelToName.values():
-            logger.setLevel(req.params['level'])
-            response = {"new_log_level": conf.levelToName(logger.level)}
+    def on_put(req, resp):
+        if 'level' in req.params.keys() and req.params['level'].upper() in conf.levelToName.values():
+            logger.info("got into if")
+            logger.setLevel(req.params['level'].upper())
+            response = {"new_log_level": conf.levelToName[logger.level]}
             resp.body = json.dumps(response)
             resp.status = falcon.HTTP_200
         else:
-            resp.body = 'level must be valid!'
-            resp.status = falcon.HTTP_200
+            logger.info("will raise error")
+            raise falcon.HTTPInvalidParam('logging level must be valid!','level')
         

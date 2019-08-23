@@ -35,34 +35,3 @@ class Log:
         Returns a logger
         """
         return self.log
-
-    def update_log_level(self, LEVEL):
-        
-        levelToName = ['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG']
-
-        try:
-            if LEVEL in levelToName:
-                self.log = logging.getLogger('history.' + __name__)
-                for hdlr in self.log.handlers[:]:
-                    self.log.removeHandler(hdlr)
-
-                self.stream = logging.StreamHandler()
-                self.stream.setLevel(LEVEL)
-                self.stream.setFormatter(self.formatter)
-
-                self.log.setLevel(LEVEL)
-                self.log.addHandler(self.stream)
-                self.log.handler_set = True
-
-                self.level = LEVEL
-            else:
-                print("Level %s not valid", LEVEL)
-        except ValueError:
-            # Endpoint part??
-            #raise falcon.HTTPError(400, "Unknown level: {} valid are {}".format(LEVEL, levelToName))
-            print("ERRO")
-    
-    @staticmethod
-    def get_log_level(sentlog):
-        levelToName = dict([(50,'CRITICAL'), (40,'ERROR'), (30,'WARNING'), (20,'INFO'), (10,'DEBUG')])
-        return levelToName[sentlog.getEffectiveLevel()]
