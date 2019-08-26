@@ -13,6 +13,7 @@ http://host:port/device/{device_id}/history?lastN={lastN}&attr={attr}&dateFrom={
 ```
 
 ### Dependencies
+
 - [falcon](https://falconframework.org/)
 - [gunicorn](https://gunicorn.org/)
 - [gevent](http://www.gevent.org/)
@@ -114,9 +115,11 @@ The persister, as the name suggests, is the responsible for the persistence of t
 
 ### Dependencies
 
+- [falcon](https://falconframework.org/)
+- [gunicorn](https://gunicorn.org/)
+- [gevent](http://www.gevent.org/)
 - [python-dateutil](https://pypi.org/project/python-dateutil/1.4/)
 - [pymongo](https://pypi.org/project/pymongo/)
-- [requests](https://pypi.org/project/requests/)
 
 The setup of these dependencies are described in the following section.
 
