@@ -4,7 +4,7 @@ if [ $1 = 'start' ]; then
     retries=0
     max_retries=2
     sleep_time=3
-    if [ -z "$PERSISTER_PORT"]
+    if [ -z "$PERSISTER_PORT" ]
     then
         PERSISTER_PORT=8057
     fi

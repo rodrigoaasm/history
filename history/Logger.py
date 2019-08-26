@@ -35,3 +35,4 @@ class Log:
         Returns a logger
         """
         return self.log
+        
