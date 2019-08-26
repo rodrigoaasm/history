@@ -32,6 +32,7 @@ HISTORY_DB_REPLICA_SET      |History database's replica set address             
 HISTORY_DB_DATA_EXPIRATION  |Seconds before removing an entry in MongoDB                   |604800
 MONGO_SHARD                 |Activate the use of sharding or not                           |False
 AUTH_URL                    |Auth url address                                              |"http://auth:5000"
+LOG_LEVEL                   |Define minimum logging level                                  |"INFO"
 
 ### How to install
 
@@ -142,6 +143,8 @@ DOJOT_SUBJECT_TENANCY       |Global subject to use when publishing tenancy lifec
 DOJOT_SUBJECT_DEVICES       |Global subject to use when receiving device lifecycle events  |"dojot.device-manager.device"
 DOJOT_SUBJECT_DEVICE_DATA   |Global subject to use when receiving data from devices        |"device-data"
 DOJOT_SERVICE_MANAGEMENT    |Global service to use when publishing dojot management events |"dojot-management"
+LOG_LEVEL                   |Define minimum logging level                                  |"INFO"
+PERSISTER_PORT              |Port to be used by persister sevice's endpoints               |8057
 
 
 ### How to install the service

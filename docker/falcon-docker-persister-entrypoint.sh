@@ -4,6 +4,11 @@ if [ $1 = 'start' ]; then
     retries=0
     max_retries=2
     sleep_time=3
+    if [ -z "$PERSISTER_PORT"]
+    then
+        PERSISTER_PORT=8057
+    fi
+
     while [ $flag -eq 0 ]; do
         if [ $retries -eq $max_retries ]; then
             echo Executed $retries retries, aborting
