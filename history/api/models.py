@@ -9,10 +9,10 @@ import dateutil.parser
 import falcon
 import pymongo
 import requests
-from history import conf, serviceLog
+from history import conf, Logger
 
 
-logger = serviceLog.Log(conf.log_level).color_log()
+logger = Logger.Log(conf.log_level).color_log()
 
 class AuthMiddleware(object):
     """
@@ -282,8 +282,9 @@ class STHHistory(object):
         resp.status = falcon.HTTP_200
         resp.body = json.dumps(ngsi_body)
 
-##Dealing with logs
+
 class LoggingInterface(object):
+    """ Retreives and sets value of the logger variable """
     @staticmethod
     def on_get(req, resp):
         response = {"log_level": conf.levelToName[logger.level]}
@@ -293,12 +294,10 @@ class LoggingInterface(object):
     @staticmethod
     def on_put(req, resp):
         if 'level' in req.params.keys() and req.params['level'].upper() in conf.levelToName.values():
-            logger.info("got into if")
             logger.setLevel(req.params['level'].upper())
             response = {"new_log_level": conf.levelToName[logger.level]}
             resp.body = json.dumps(response)
             resp.status = falcon.HTTP_200
         else:
-            logger.info("will raise error")
-            raise falcon.HTTPInvalidParam('logging level must be valid!','level')
+            raise falcon.HTTPInvalidParam('Logging level must be DEBUG, INFO, WARNING, ERROR or CRITICAL!','level')
         

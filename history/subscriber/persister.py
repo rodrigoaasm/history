@@ -5,15 +5,15 @@ import time
 import pymongo
 from datetime import datetime
 from dateutil.parser import parse
-from history import conf, serviceLog
+from history import conf, Logger
 from dojot.module import Messenger, Config, Auth
 
-LOGGER = serviceLog.Log(conf.log_level).color_log()
+LOGGER = Logger.Log(conf.log_level).color_log()
 
 class Persister:
 
     def __init__(self):
-        LOGGER = serviceLog.Log(conf.log_level).color_log()
+        #LOGGER = Logger.Log(conf.log_level).color_log()
         self.db = None
         self.client = None
 
@@ -212,7 +212,28 @@ class Persister:
         else:
             LOGGER.debug(f"Notification should not be persisted. Discarding it.")
 
+class LoggingInterface(object):
+    @staticmethod
+    def on_get(req,resp):
+        """
+        Returns the level attribute value of the LOGGER variable
+        """
+        response = {"log_level": conf.levelToName[LOGGER.level]}
+        resp.body = json.dumps(response)
+        resp.status = falcon.HTTP_200
 
+    @staticmethod
+    def on_put(req,resp):
+        """
+        Set a new value to the level attribute of the LOGGER variable
+        """
+        if 'level' in req.params.keys() and req.params['level'].upper() in conf.levelToName.values():
+            LOGGER.setLevel(req.params['level'].upper())
+            response = {"new_log_level": conf.levelToName[LOGGER.level]}
+            resp.body = json.dumps(response)
+            resp.status = falcon.HTTP_200
+        else:
+            raise falcon.HTTPInvalidParam('Logging level must be DEBUG, INFO, WARNING, ERROR or CRITICAL!','level')
 
 def main():
     """
@@ -241,22 +262,3 @@ def main():
 
 if __name__=="__main__":
     main()
-
-#Dealing with logging
-class LoggingInterface(object):
-    @staticmethod
-    def on_get(req,resp):
-        response = {"log_level": conf.levelToName[LOGGER.level]}
-        resp.body = json.dumps(response)
-        resp.status = falcon.HTTP_200
-
-
-    @staticmethod
-    def on_put(req,resp):
-        if 'level' in req.params.keys() and req.params['level'].upper() in conf.levelToName.values():
-            LOGGER.setLevel(req.params['level'])
-            response = {"new_log_level": conf.levelToName[LOGGER.level]}
-            resp.body = json.dumps(response)
-            resp.status = falcon.HTTP_200
-        else:
-            raise falcon.HTTPInvalidParam('logging level must be valid!','level')
