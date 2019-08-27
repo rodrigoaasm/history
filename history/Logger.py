@@ -29,10 +29,13 @@ class Log:
             self.log.setLevel(log_level)
             self.log.addHandler(self.stream)
             self.log.handler_set = True
+    
+    @staticmethod
+    def update_log_level(logger, level):
+        logger.setLevel(level.upper())
 
     def color_log(self):
         """
         Returns a logger
         """
         return self.log
-        
