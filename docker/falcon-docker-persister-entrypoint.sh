@@ -15,20 +15,27 @@ if [ $1 = 'start' ]; then
             exit 1
         fi
         
-        exec gunicorn history.subscriber.app:app \
+        #Running gunicorn server
+        if exec gunicorn history.subscriber.app:app \
                   --bind 0.0.0.0:$PERSISTER_PORT \
                   --reload -R \
                   --access-logfile - \
                   --log-file - \
                   --env PYTHONUNBUFFERED=1 -k gevent 2>&1 &
-        
-        exec python history/subscriber/persister.py        
-        
-        if [ $? -eq 0 ]; then
+        then
             flag=1
         else
-            echo "Cannot start application, retying in $sleep_time seconds..."
-            let retries++
+            echo "Cannot start application, retrying in $sleep_time seconds..."
+            ((retries++))
+        fi
+        
+        #Runnin persister module
+        if exec python history/subscriber/persister.py
+        then
+            flag=1
+        else
+            echo "Cannot start application, retrying in $sleep_time seconds..."
+            ((retries++))
         fi
         sleep $sleep_time        
     done

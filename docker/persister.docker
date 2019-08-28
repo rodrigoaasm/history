@@ -26,4 +26,3 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 WORKDIR /usr/src/app
 
 CMD ["sh", "./docker/falcon-docker-persister-entrypoint.sh", "start"]
-# CMD ["python", "history/subscriber/persister.py"]

@@ -29,8 +29,6 @@ Key                         | Purpose                                           
 ----------------------------|--------------------------------------------------------------|----------------
 HISTORY_DB_ADDRESS          |History database's address                                    |"mongodb"
 HISTORY_DB_PORT             |History database's port                                       |27017
-HISTORY_DB_REPLICA_SET      |History database's replica set address                        |None
-HISTORY_DB_DATA_EXPIRATION  |Seconds before removing an entry in MongoDB                   |604800
 MONGO_SHARD                 |Activate the use of sharding or not                           |False
 AUTH_URL                    |Auth url address                                              |"http://auth:5000"
 LOG_LEVEL                   |Define minimum logging level                                  |"INFO"
