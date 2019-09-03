@@ -74,7 +74,12 @@ class Persister:
         parsed_message = dict()
         parsed_message['attrs'] = data['data']['attrs']
         parsed_message['metadata'] = dict()
-        parsed_message['metadata']['timestamp'] = int(time.time() * 1000)
+
+        if data['meta']['timestamp'] is None:
+             parsed_message['metadata']['timestamp'] = int(time.time() * 1000)
+        else:
+             parsed_message['metadata']['timestamp'] = data['meta']['timestamp']
+       
         parsed_message['metadata']['deviceid'] = data['data']['id']
         parsed_message['metadata']['tenant'] = data['meta']['service']
         LOGGER.info("new message is: %s" % parsed_message)
@@ -133,26 +138,31 @@ class Persister:
             return
         del metadata['deviceid']
         timestamp = self.parse_datetime(metadata.get('timestamp', None))
-        del metadata['timestamp']
+        if "timestamp" in metadata:
+            del metadata['timestamp']
+
         if metadata.get('tenant', None) != None:
             del metadata['tenant']
         docs = []
-        for attr in data.get('attrs', {}).keys():
-            docs.append({
-                'attr': attr,
-                'value': data['attrs'][attr],
-                'device_id': device_id,
-                'ts': timestamp,
-                'metadata': metadata
-            })
-        if docs:
-            try:
-                collection_name = "{}_{}".format(tenant,device_id)
-                self.db[collection_name].insert_many(docs)
-            except Exception as error:
-                LOGGER.warn('Failed to persist received information.\n%s', error)
+        if type(data["attrs"]) is dict:
+            for attr in data.get('attrs', {}).keys():
+                docs.append({
+                    'attr': attr,
+                    'value': data['attrs'][attr],
+                    'device_id': device_id,
+                    'ts': timestamp,
+                    'metadata': metadata
+                })
+            if docs:
+                try:
+                    collection_name = "{}_{}".format(tenant,device_id)
+                    self.db[collection_name].insert_many(docs)
+                except Exception as error:
+                    LOGGER.warn('Failed to persist received information.\n%s', error)
         else:
-            LOGGER.info('Got empty event from device [%s] - ignoring', device_id)
+            LOGGER.warning(f"Expected attribute dictionary, got {type(data['attrs'])}")
+            LOGGER.warning("Bailing out")
+
 
     def handle_event_devices(self, tenant, message):
         """

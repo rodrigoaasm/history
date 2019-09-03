@@ -213,9 +213,6 @@ class NotificationHistory(object):
         filter_query = req.params
         query = NotificationHistory.get_query(filter_query)      
         history['notifications'] = NotificationHistory.get_notifications(collection, query)
-        if(not history['notifications']):
-            msg = "There aren't notifications for this tenant on this filter"
-            raise falcon.HTTPNotFound(title="Notifications not found", description=msg)
 
         resp.status = falcon.HTTP_200
         resp.body = json.dumps(history)
