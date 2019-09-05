@@ -1,0 +1,42 @@
+import pytest
+import falcon
+import json
+import unittest
+import history
+import datetime
+from unittest.mock import Mock, MagicMock, patch
+from history import app
+from history.api import models
+from history.api.models import NotificationHistory, HistoryUtil
+from falcon import testing
+
+class TestNotificationHistory:
+
+    @patch.object(HistoryUtil,'get_collection')
+    @patch('history.api.models.NotificationHistory.get_query')
+    @patch('history.api.models.NotificationHistory.get_notifications')
+    def test_notification_on_get(self,mock_hutil,mock_getquery,mock_get_notifications):
+        req = MagicMock()
+        req.context.return_value = {}
+        resp = falcon.Response()
+        mock_hutil.return_value = {}
+        mock_getquery.return_value = {}
+        mock_get_notifications.return_value= {}
+        NotificationHistory.on_get(req,resp)
+        assert resp.status == falcon.HTTP_200
+    
+    def test_get_query(self):
+        with patch.object(HistoryUtil,'model_value') as mock_model_value:
+            mock_model_value.return_value = 'bar'
+            filter_query = {"key":"foo"}
+            returned_query = NotificationHistory.get_query(filter_query)
+            expected_query = {'query': {'metaAttrsFilter.key': 'bar'}, 'limit_val': 10, 'sort': [('ts', -1)], 'filter': {'_id': False, '@timestamp': False, '@version': False}}
+            assert returned_query == expected_query
+    
+    def test_get_notifications(self):
+        timestamp = datetime.datetime.now()
+        collection = MagicMock()
+        collection.find.return_value = {"ts":timestamp}
+        query = {"query":"foo", "filter":"bar", "limit_val":1, "sort": -1, "ts": timestamp}
+        assert NotificationHistory.get_notifications(collection,query) == collection.find
+            
