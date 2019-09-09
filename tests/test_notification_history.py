@@ -4,6 +4,7 @@ import json
 import unittest
 import history
 import datetime
+import pymongo
 from unittest.mock import Mock, MagicMock, patch
 from history import app
 from history.api import models
@@ -33,9 +34,13 @@ class TestNotificationHistory:
             expected_query = {'query': {'metaAttrsFilter.key': 'bar'}, 'limit_val': 10, 'sort': [('ts', -1)], 'filter': {'_id': False, '@timestamp': False, '@version': False}}
             assert returned_query == expected_query
     
-    def test_get_notifications(self):
-        collection = MagicMock()
-        collection.find.return_value = {"ts":1567704621}
-        query = {"query":"", "filter":"", "limit_val": 0, "sort": 0 }
-        assert NotificationHistory.get_notifications(collection,query) == []
+    @patch('pymongo.collection.Collection.find')
+    def test_get_notifications(self, mock_find):
+        mock_find.return_value = {"meta":[
+            {"ts":1567704621},
+            {"ts":1567701021},
+            {"ts":1567099821}]
+        }
+        query = {"query":"","filter":"","limit_val":0,"sort":0}
+        assert NotificationHistory.get_notifications(mock_find,query) == []
             
