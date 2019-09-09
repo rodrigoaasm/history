@@ -34,9 +34,8 @@ class TestNotificationHistory:
             assert returned_query == expected_query
     
     def test_get_notifications(self):
-        timestamp = datetime.datetime.now()
         collection = MagicMock()
-        collection.find.return_value = {"ts":timestamp}
-        query = {"query":"foo", "filter":"bar", "limit_val":1, "sort": -1, "ts": timestamp}
-        assert NotificationHistory.get_notifications(collection,query) == collection.find
+        collection.find.return_value = {"ts":1567704621}
+        query = {"query":"", "filter":"", "limit_val": 0, "sort": 0 }
+        assert NotificationHistory.get_notifications(collection,query) == []
             
