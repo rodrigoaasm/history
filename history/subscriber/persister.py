@@ -13,7 +13,6 @@ LOGGER = Logger.Log(conf.log_level).color_log()
 class Persister:
 
     def __init__(self):
-        #LOGGER = Logger.Log(conf.log_level).color_log()
         self.db = None
         self.client = None
 
@@ -218,7 +217,7 @@ class LoggingInterface(object):
         """
         Returns the level attribute value of the LOGGER variable
         """
-        response = {"log_level": conf.levelToName[LOGGER.level]}
+        response = {"log_level": Logger.Log.levelToName[LOGGER.level]}
         resp.body = json.dumps(response)
         resp.status = falcon.HTTP_200
 
@@ -227,9 +226,9 @@ class LoggingInterface(object):
         """
         Set a new value to the level attribute of the LOGGER variable
         """
-        if 'level' in req.params.keys() and req.params['level'].upper() in conf.levelToName.values():
+        if 'level' in req.params.keys() and req.params['level'].upper() in Logger.Log.levelToName.values():
             LOGGER.setLevel(req.params['level'].upper())
-            response = {"new_log_level": conf.levelToName[LOGGER.level]}
+            response = {"new_log_level": Logger.Log.levelToName[LOGGER.level]}
             resp.body = json.dumps(response)
             resp.status = falcon.HTTP_200
         else:

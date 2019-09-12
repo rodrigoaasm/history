@@ -287,15 +287,15 @@ class LoggingInterface(object):
     """ Retreives and sets value of the logger variable """
     @staticmethod
     def on_get(req, resp):
-        response = {"log_level": conf.levelToName[logger.level]}
+        response = {"log_level": Logger.Log.levelToName[logger.level]}
         resp.body = json.dumps(response)
         resp.status = falcon.HTTP_200
 
     @staticmethod
     def on_put(req, resp):
-        if 'level' in req.params.keys() and req.params['level'].upper() in conf.levelToName.values():
+        if 'level' in req.params.keys() and req.params['level'].upper() in Logger.Log.levelToName.values():
             logger.setLevel(req.params['level'].upper())
-            response = {"new_log_level": conf.levelToName[logger.level]}
+            response = {"new_log_level": Logger.Log.levelToName[logger.level]}
             resp.body = json.dumps(response)
             resp.status = falcon.HTTP_200
         else:

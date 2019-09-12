@@ -9,8 +9,7 @@ import os
 # and configuration retrieval functions
 
 #Logger related configuration
-levelToName = dict([(50,'CRITICAL'), (40,'ERROR'), (30,'WARNING'), (20,'INFO'), (10,'DEBUG')])
-log_level = os.environ.get("LOG_LEVEL","DEBUG")
+log_level = os.environ.get("LOG_LEVEL","INFO")
 
 # mongo related configuration
 db_address = os.environ.get("HISTORY_DB_ADDRESS", "mongodb")

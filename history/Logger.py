@@ -5,7 +5,9 @@ from logging import config as config_log
 from colorlog import ColoredFormatter
 
 class Log:
-
+    
+    levelToName = dict([(50,'CRITICAL'), (40,'ERROR'), (30,'WARNING'), (20,'INFO'), (10,'DEBUG')])
+    
     def __init__(self, log_level=logging.DEBUG,
                  log_format="[%(log_color)s%(asctime)-8s%(reset)s] |%(log_color)s%(module)-8s%(reset)s| %(log_color)s%(levelname)s%(reset)s: %(log_color)s%(message)s%(reset)s", is_disabled=False):
              
