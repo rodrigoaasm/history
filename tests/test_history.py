@@ -6,7 +6,7 @@ from unittest.mock import Mock, MagicMock, patch
 from history import app
 from history.api import models
 from history.api.models import DeviceHistory, STHHistory, AuthMiddleware, NotificationHistory, HistoryUtil
-from falcon import testing
+
 
 class TestHistory():  
     

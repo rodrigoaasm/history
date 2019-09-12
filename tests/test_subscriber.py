@@ -67,7 +67,7 @@ class TestPersister:
     #Testing handle_event_data
     def test_handle_event_data_invalid_json(self):
         p = Persister()
-        message = "Yee-Haw!"
+        message = "Test_Message"
         assert p.handle_event_data('admin',message) == None
 
     def test_handle_event_data_no_data(self):
