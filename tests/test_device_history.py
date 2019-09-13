@@ -39,3 +39,24 @@ class TestDeviceHistory:
         with pytest.raises(falcon.HTTPNotFound):
             mock_get_single_attr.return_value = []
             DeviceHistory.on_get(request,response,'testid')
+    
+    @patch('history.api.models.HistoryUtil.get_collection')
+    @patch('history.api.models.DeviceHistory.get_attrs')
+    @patch('history.api.models.DeviceHistory.parse_request')
+    def test_on_get_no_attr(self,mock_get_collection,mock_get_attrs,mock_parse_request):
+        with patch('history.api.models.DeviceHistory.get_single_attr') as mock_get_attr:
+            request = MagicMock()
+            request.params.keys.return_value = []
+            request.get_header.return_value = 'token'
+            request.params.return_value = ['value']
+            response = falcon.Response()
+            
+            attr_list = ['attr1','attr2']
+            mock_get_attrs.__getitem__.side_effect = lambda key: attr_list[key]
+
+            mock_parse_request.return_value = None
+            mock_get_attr.return_value = ''
+            
+            DeviceHistory.on_get(request, response, 'test')
+
+            assert response.status == falcon.HTTP_200    
