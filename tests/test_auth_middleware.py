@@ -30,4 +30,3 @@ class TestAuthMiddleware:
     def test_parse_token_none(self):
         authmidd = AuthMiddleware()
         assert authmidd._parse_token(None) is None
-        

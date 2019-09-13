@@ -42,5 +42,4 @@ class TestNotificationHistory:
             {"ts":1567099821}]
         }
         query = {"query":"","filter":"","limit_val":0,"sort":0}
-        assert NotificationHistory.get_notifications(mock_find,query) == []
-            
+        assert NotificationHistory.get_notifications(mock_find,query) == []            

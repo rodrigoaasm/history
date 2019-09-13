@@ -30,4 +30,3 @@ class TestSTHH:
         STHHistory.on_get(request,response,'test_device','test_id','blim')
         assert response.status == falcon.HTTP_200
         
-                

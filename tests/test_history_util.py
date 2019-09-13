@@ -44,4 +44,3 @@ class TestHistoryUtil:
     def test_model_value_wrong_type(self):
         with pytest.raises(ValueError):
             assert HistoryUtil.model_value("value", "int")
-            

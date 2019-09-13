@@ -138,5 +138,3 @@ class TestPersister:
         p = Persister()
         p.create_indexes_for_notifications('admin')
         assert mock_create_index.called 
-
-

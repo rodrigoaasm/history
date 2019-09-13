@@ -39,4 +39,3 @@ class TestDeviceHistory:
         with pytest.raises(falcon.HTTPNotFound):
             mock_get_single_attr.return_value = []
             DeviceHistory.on_get(request,response,'testid')
-            
