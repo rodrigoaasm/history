@@ -33,7 +33,7 @@ class TestHistoryUtil:
     
     def test_check_type_invalid(self):
         with pytest.raises(TypeError):
-            assert HistoryUtil.check_type(True) == None
+            assert HistoryUtil.check_type(True) is None
     
     def test_model_value_int(self):
         assert HistoryUtil.model_value("12", "int") == 12
@@ -44,3 +44,4 @@ class TestHistoryUtil:
     def test_model_value_wrong_type(self):
         with pytest.raises(ValueError):
             assert HistoryUtil.model_value("value", "int")
+            

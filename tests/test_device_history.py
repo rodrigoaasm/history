@@ -5,8 +5,6 @@ from history.api.models import DeviceHistory, HistoryUtil
 
 class TestDeviceHistory:
     
-    #TODO: find way to test this
-    
     def test_parse_request(self):
         request = MagicMock()
         request.params.keys.return_value = ['lastN','dateFrom','dateTo']
@@ -30,11 +28,6 @@ class TestDeviceHistory:
             request.params.__getitem__.side_effect = lambda key: req_content[key]
             DeviceHistory.parse_request(request,"test")
 
-    
-
-    #test get_attrs here
-    #test get_single_attr her
-
     @patch('history.api.models.HistoryUtil.get_collection')
     @patch('history.api.models.DeviceHistory.get_single_attr')
     def test_on_get_single_attr(self,mock_historyu_get_collection, mock_get_single_attr):
@@ -46,3 +39,4 @@ class TestDeviceHistory:
         with pytest.raises(falcon.HTTPNotFound):
             mock_get_single_attr.return_value = []
             DeviceHistory.on_get(request,response,'testid')
+            
