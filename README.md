@@ -13,6 +13,7 @@ http://host:port/device/{device_id}/history?lastN={lastN}&attr={attr}&dateFrom={
 ```
 
 ### Dependencies
+
 - [falcon](https://falconframework.org/)
 - [gunicorn](https://gunicorn.org/)
 - [gevent](http://www.gevent.org/)
@@ -30,6 +31,7 @@ HISTORY_DB_ADDRESS          |History database's address                         
 HISTORY_DB_PORT             |History database's port                                       |27017
 HISTORY_DB_REPLICA_SET      |History database's replica set address                        |None
 AUTH_URL                    |Auth url address                                              |"http://auth:5000"
+LOG_LEVEL                   |Define minimum logging level                                  |"INFO"
 
 ### How to install
 
@@ -111,9 +113,11 @@ The persister, as the name suggests, is the responsible for the persistence of t
 
 ### Dependencies
 
+- [falcon](https://falconframework.org/)
+- [gunicorn](https://gunicorn.org/)
+- [gevent](http://www.gevent.org/)
 - [python-dateutil](https://pypi.org/project/python-dateutil/1.4/)
 - [pymongo](https://pypi.org/project/pymongo/)
-- [requests](https://pypi.org/project/requests/)
 
 The setup of these dependencies are described in the following section.
 
@@ -140,6 +144,8 @@ DOJOT_SUBJECT_TENANCY       |Global subject to use when publishing tenancy lifec
 DOJOT_SUBJECT_DEVICES       |Global subject to use when receiving device lifecycle events  |"dojot.device-manager.device"
 DOJOT_SUBJECT_DEVICE_DATA   |Global subject to use when receiving data from devices        |"device-data"
 DOJOT_SERVICE_MANAGEMENT    |Global service to use when publishing dojot management events |"dojot-management"
+LOG_LEVEL                   |Define minimum logging level                                  |"INFO"
+PERSISTER_PORT              |Port to be used by persister sevice's endpoints               |8057
 
 
 ### How to install the service

@@ -1,19 +1,18 @@
 import base64
 import json
+import falcon
 import time
 import pymongo
 from datetime import datetime
 from dateutil.parser import parse
-from history import conf
+from history import conf, Logger
 from dojot.module import Messenger, Config, Auth
-from dojot.module.logger import Log
 
-LOGGER = Log().color_log()
+LOGGER = Logger.Log(conf.log_level).color_log()
 
 class Persister:
 
     def __init__(self):
-        LOGGER = Log().color_log()
         self.db = None
         self.client = None
 
@@ -216,7 +215,28 @@ class Persister:
         else:
             LOGGER.debug(f"Notification should not be persisted. Discarding it.")
 
+class LoggingInterface(object):
+    @staticmethod
+    def on_get(req,resp):
+        """
+        Returns the level attribute value of the LOGGER variable
+        """
+        response = {"log_level": Logger.Log.levelToName[LOGGER.level]}
+        resp.body = json.dumps(response)
+        resp.status = falcon.HTTP_200
 
+    @staticmethod
+    def on_put(req,resp):
+        """
+        Set a new value to the level attribute of the LOGGER variable
+        """
+        if 'level' in req.params.keys() and req.params['level'].upper() in Logger.Log.levelToName.values():
+            LOGGER.setLevel(req.params['level'].upper())
+            response = {"new_log_level": Logger.Log.levelToName[LOGGER.level]}
+            resp.body = json.dumps(response)
+            resp.status = falcon.HTTP_200
+        else:
+            raise falcon.HTTPInvalidParam('Logging level must be DEBUG, INFO, WARNING, ERROR or CRITICAL!','level')
 
 def main():
     """
@@ -230,7 +250,7 @@ def main():
     persister.init_mongodb()
     persister.create_indexes_for_notifications(auth.get_tenants())
     LOGGER.debug("... persister was successfully initialized.")
-    LOGGER.debug("Initializing dojot messenger...")
+    LOGGER.debug("Initializing dojot messenger...")     
     messenger = Messenger("Persister",config)
     messenger.init()
     messenger.create_channel(config.dojot['subjects']['devices'], "r")
