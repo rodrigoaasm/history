@@ -26,7 +26,7 @@ class TestHistoryUtil:
             HistoryUtil.get_collection('service','item')
 
     def test_check_type_string(self):
-        assert HistoryUtil.check_type(str("test")) == "string"
+        assert HistoryUtil.check_type('"test"') == "string"
     
     def test_check_type_int(self):
         assert HistoryUtil.check_type("12") == "int"
