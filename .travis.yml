@@ -18,7 +18,7 @@ script:
   - docker build -t history -f ./docker/history.docker .
   - docker build -t persister -f ./docker/persister.docker .
   - ./tests/start-test.sh
-  - python3 -m pytest --cov-report=html --cov=. tests/
+  - python3 -m pytest --cov-report=html --cov=history tests/
 after_success:
   - codecov
   - travis/publish.sh
