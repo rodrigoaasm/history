@@ -8,12 +8,8 @@ import os
 # This file contains the default configuration values
 # and configuration retrieval functions
 
-import logging
-import os
-
-LOGGER = logging.getLogger("history." + __name__)
-LOGGER.addHandler(logging.StreamHandler())
-LOGGER.setLevel(logging.INFO)
+#Logger related configuration
+log_level = os.environ.get("LOG_LEVEL","INFO")
 
 # mongo related configuration
 db_address = os.environ.get("HISTORY_DB_ADDRESS", "mongodb")
