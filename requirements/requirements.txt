@@ -6,3 +6,6 @@ python-dateutil>=0.0.0
 pymongo==3.2.2
 requests==2.20.0
 dojot.module==0.0.1a4
+
+pytest==4.0.0
+pytest-cov==2.6.0
