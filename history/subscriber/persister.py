@@ -175,14 +175,18 @@ class Persister:
             :type message: str
             :param message Device lifecyle message, as produced by device manager
         """
-        data = json.loads(message)
-        LOGGER.info('got device event %s', data)
-        if data['event'] == 'device.create' or data['event'] == 'device.update':
-            collection_name = "{}_{}".format(data['meta']['service'], data['data']['id'])
-            self.create_indexes(collection_name)
-        elif data['event'] == 'configure':
-            new_message = self.parse_message(data)
-            self.handle_event_data(tenant, new_message)
+        try:
+            data = json.loads(message)
+            LOGGER.info('got device event %s', data)
+            if data['event'] == 'device.create' or data['event'] == 'device.update':
+                if "meta" in data and "data" in data:
+                    collection_name = "{}_{}".format(data['meta']['service'], data['data']['id'])
+                    self.create_indexes(collection_name)
+            elif data['event'] == 'configure':
+                new_message = self.parse_message(data)
+                self.handle_event_data(tenant, new_message)
+        except Exception as error:
+            LOGGER.warning('Failed to persist device event: %s', error)
 
     def handle_new_tenant(self, tenant, message):
         data = json.loads(message)
