@@ -11,7 +11,8 @@ then
 else 
   export VERSION="${TRAVIS_BRANCH}"
 fi
-node_modules/.bin/aglio -i history.apib -o apiary_${VERSION}.html
+
+docker run --volume $(pwd):/temp:Z dojot/aglio -i /temp/history.apib -o - > ./apiary_${VERSION}.html
 
 git add apiary_${VERSION}.html
 git commit -m 'Updating gh-pages'
@@ -19,3 +20,4 @@ git push http://${GITHUB_TOKEN}:x-oauth-basic@github.com/${TRAVIS_REPO_SLUG} gh-
 git checkout -- .
 git clean -fd
 git checkout ${TRAVIS_BRANCH}
+
