@@ -20,3 +20,4 @@ git push http://${GITHUB_TOKEN}:x-oauth-basic@github.com/${TRAVIS_REPO_SLUG} gh-
 git checkout -- .
 git clean -fd
 git checkout ${TRAVIS_BRANCH}
+
