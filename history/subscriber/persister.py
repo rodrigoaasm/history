@@ -40,6 +40,7 @@ class Persister:
         :param collection_name: collection to create index
         """
         self.db[collection_name].create_index([('ts', pymongo.DESCENDING)])
+        self.db[collection_name].create_index([('attr', pymongo.DESCENDING),('ts', pymongo.DESCENDING)])
         self.db[collection_name].create_index('ts', expireAfterSeconds=conf.db_expiration)
 
     def create_indexes_for_notifications(self, tenants):
@@ -177,7 +178,7 @@ class Persister:
         try:
             data = json.loads(message)
             LOGGER.info('got device event %s', data)
-            if data['event'] == 'device.create' or data['event'] == 'device.update':
+            if data['event'] == 'create' or data['event'] == 'update':
                 if "meta" in data and "data" in data:
                     collection_name = "{}_{}".format(data['meta']['service'], data['data']['id'])
                     self.create_indexes(collection_name)
