@@ -45,7 +45,7 @@ class TestPersister:
     @patch.object(Persister,'create_indexes')
     def test_handle_event_devices_create(self,mock_create_indexes):
         message = json.dumps({
-            "event":"device.create",
+            "event":"create",
             "data":{"id":"e51k"},
             "meta":{"service":"admin"}
         })
