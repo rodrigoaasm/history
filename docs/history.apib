@@ -1,5 +1,5 @@
 FORMAT: 1A
-HOST: http://localhost:8000/history
+HOST: http://localhost:8000/history/
 
 # History
 
@@ -99,7 +99,7 @@ If no query string is set, then all values from all attributes are returned.
 
 + Parameters
     + device_id:b374a5 (required, string) - Device identifier
-    + attr:temperature,pressure (optional, string) - Device attribute to be requested. If not used, returns all attributes.
+    + attr:`temperature,pressure` (optional, string) - Device attribute to be requested. If not used, returns all attributes. (It can be a comma-separated list of attributes.)
     + dateFrom:`2018-06-05T18:00:00Z` (optional, string) - Start time of a time-based query
     + dateTo:`2018-06-15T18:00:00Z` (optional, string) - End time of a time-based query
     + lastN:3 (optional, number) - Number of most current values (valid for each attribute, if more than one)
@@ -178,7 +178,7 @@ If no query string is set, then all values from all attributes are returned.
                         "protocol": "mqtt",
                         "payload": "json"
                     },
-                    "value": "10330",
+                    "value": "1053",
                     "attr": "pressure"
                   }
                 ]
