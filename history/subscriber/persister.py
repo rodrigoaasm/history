@@ -233,6 +233,9 @@ class LoggingInterface(object):
         """
         if 'level' in req.params.keys() and req.params['level'].upper() in Logger.Log.levelToName.values():
             LOGGER.setLevel(req.params['level'].upper())
+            for handler in LOGGER.handlers:
+                handler.setLevel(req.params['level'].upper())
+
             response = {"new_log_level": Logger.Log.levelToName[LOGGER.level]}
             resp.body = json.dumps(response)
             resp.status = falcon.HTTP_200
