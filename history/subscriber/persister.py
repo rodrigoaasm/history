@@ -7,6 +7,8 @@ from datetime import datetime
 from dateutil.parser import parse
 from history import conf, Logger
 from dojot.module import Messenger, Config, Auth
+from wsgiref import simple_server  # NOQA
+import os
 
 LOGGER = Logger.Log(conf.log_level).color_log()
 
@@ -266,6 +268,12 @@ def main():
     messenger.on(config.dojot['subjects']['tenancy'], "message", persister.handle_new_tenant)
     messenger.on("dojot.notifications", "message", persister.handle_notification)
     LOGGER.debug("... dojot messenger was successfully initialized.")
+
+    # Create falcon app
+    app = falcon.API()
+    app.add_route('/persister/log', LoggingInterface())
+    httpd = simple_server.make_server('0.0.0.0', os.environ.get("PERSISTER_PORT", 8057), app)
+    httpd.serve_forever()
 
 if __name__=="__main__":
     main()
