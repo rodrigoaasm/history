@@ -7,3 +7,5 @@ venv/
 build/
 .vscode
 dist/
+.coverage
+htmlcov/
