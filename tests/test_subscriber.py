@@ -2,8 +2,8 @@ import pytest
 import json
 import pymongo
 import unittest
-from unittest.mock import Mock, MagicMock, patch
-from history.subscriber.persister import Persister, LoggingInterface
+from unittest.mock import Mock, MagicMock, patch, call
+from history.subscriber.persister import Persister, LoggingInterface, Auth
 
 
 class TestPersister:
@@ -181,3 +181,21 @@ class TestLoggingInterface(unittest.TestCase):
         with self.assertRaises(Exception) as context:
             li.on_put(req, None)
         self.assertTrue('invalid_param' in str(context.exception))
+
+
+@patch.object(Auth, 'get_tenants', return_value=None)
+@patch.object(Persister, 'init_mongodb')
+@patch.object(Persister, 'create_indexes_for_notifications')
+@patch('history.subscriber.persister.Messenger')
+@patch('history.subscriber.persister.falcon.API')
+@patch('history.subscriber.persister.simple_server')
+def test_persister_main(mock_simple_server, mock_falcon_api, mock_messenger, mock_create_indexes_for_notifications,
+                        mock_init_mongodb, mock_get_tenants):
+    from history.subscriber.persister import main
+    main()
+    assert mock_init_mongodb.called
+    assert mock_get_tenants.called
+    assert mock_create_indexes_for_notifications.called
+    assert mock_messenger.called
+    assert mock_falcon_api.called
+    assert mock_simple_server.make_server.called
