@@ -20,6 +20,14 @@ string might select more than one attribute. For instance:
 `?firstN=3&attr=temperature,pressure` will return the first 3 values (the oldest ones) from both
 `temperature` and `pressure` attributes.
 
+__Note that__ when the `firstN` parameter is informed, the query returns the
+first records that were inserted in the database, that is, the oldest ones are
+returned first in the list. In this way, we have an ascending order in relation
+to the timestamp.<br>
+When the `lastN` parameter is informed, the query returns the last records that
+were inserted in the database, that is, the newest ones are returned first in
+the list. In this way, we have a descending order in relation to the timestamp.
+
 If no query string is set, then all values from all attributes are returned.
 
 
