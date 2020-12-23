@@ -1,0 +1,52 @@
+history/persister
+This software is copyright (c) 2020 by CPQD <www.cpqd.com.br>.
+
+It is licensed under Apache License, Version 2.0.
+
+It uses libraries, which are available under the following licenses:
+
+* Apache License, Version 2.0
+     - coverage (source code available at https://github.com/nedbat/coveragepy)
+     - dojot.module (source code available at https://github.com/dojot/dojot-module-python)
+     - falcon (source code available at https://github.com/falconry/falcon)
+     - funcsigs (source code available at https://github.com/aliles/funcsigs)
+     - importlib-metadata (source code available at https://github.com/python/importlib_metadata)
+     - kafka-python (source code available at https://github.com/dpkp/kafka-python)
+     - pymongo (source code available at https://github.com/mongodb/mongo-python-driver)
+     - python-dateutil (source code available at https://github.com/dateutil/dateutil)
+     - requests (source code available at https://github.com/psf/requests)
+
+* MIT
+     - atomicwrites (source code available at https://github.com/untitaker/python-atomicwrites)
+     - attrs (source code available at https://github.com/python-attrs/attrs)
+     - colorlog (source code available at https://github.com/borntyping/python-colorlog)
+     - configparser (source code available at https://github.com/jaraco/configparse)
+     - gevent (source code available at https://github.com/gevent/gevent)
+     - greenlet (source code available at https://github.com/python-greenlet/greenlet)
+     - gunicorn (source code available at https://github.com/benoitc/gunicorn)
+     - more-itertools (source code availabe at https://github.com/more-itertools/more-itertools)
+     - pathlib2 (source code availabe at https://github.com/mcmtroffaes/pathlib2)
+     - pluggy (source code availabe at https://github.com/pytest-dev/pluggy)
+     - py (source code available at https://github.com/pytest-dev/py)
+     - pytest (source code available at https://github.com/pytest-dev/pytest)
+     - pytest-cov (source code available at https://github.com/pytest-dev/pytest-cov)
+     - python-mimeparse (source code available at https://github.com/dbtsai/python-mimeparse)
+     - six (source code available at https://github.com/benjaminp/six)
+     - urllib3 (source code available at https://github.com/urllib3/urllib3)
+     - zipp (source code available at https://github.com/jaraco/zipp)
+
+* BSD (3-Clause)
+     - numpy (source code available at https://github.com/numpy/numpy)
+     - scandir (source code available at https://github.com/benhoyt/scandir)
+
+* BSD-Like
+     - idna (source code available at https://github.com/kjd/idna)
+
+* MPL 2.0
+     - certifi (source code available at https://github.com/certifi/python-certifi)
+
+* Python Software Foundation License
+     -  contextlib2 (source code available at https://github.com/jazzband/contextlib2)
+
+* LGPL
+     - chardet (source code available at https://github.com/chardet/chardet)
