@@ -73,8 +73,8 @@ class AuthMiddleware(object):
             elif ('iss' in data):
                 iss = data['iss']
                 return iss[iss.rindex('/') + 1:]
-            else:
-                return None
+            
+            return None
         except Exception as exception:
             logger.error(exception)
             return None
