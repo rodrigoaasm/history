@@ -19,7 +19,7 @@ class AuthMiddleware(object):
         Middleware used to populate context with relevant JWT-sourced information.
         Also used to validate and refuse requests that do not contain valid tokens associated
         with them.
-    """     
+    """
 
     def process_request(self, req, resp):
         logger.debug('AuthMiddleware.process_request [start]')
@@ -29,14 +29,16 @@ class AuthMiddleware(object):
         if token is None:
             description = 'Please provide an auth token as part of the request.'
             logger.debug('Authentication required ' + description)
-            raise falcon.HTTPUnauthorized('Authentication required', description, challenges)
+            raise falcon.HTTPUnauthorized(
+                'Authentication required', description, challenges)
 
         req.context['related_service'] = self._parse_token(token)
         if req.context['related_service'] is None:
             description = ('The provided auth token is not valid. '
                            'Please request a new token and try again.')
             logger.debug('Authentication required ' + description)
-            raise falcon.HTTPUnauthorized('Authentication required', description, challenges)
+            raise falcon.HTTPUnauthorized(
+                'Authentication required', description, challenges)
 
         logger.debug('AuthMiddleware.process_request [passed]')
 
@@ -65,7 +67,14 @@ class AuthMiddleware(object):
         payload = token.split('.')[1]
         try:
             data = json.loads(AuthMiddleware._decode_base64(payload))
-            return data['service']
+            # to ensure backward compatibility
+            if ('service' in data):
+                return data['service']
+            elif ('iss' in data):
+                iss = data['iss']
+                return iss[iss.rindex('/') + 1:]
+            
+            return None
         except Exception as exception:
             logger.error(exception)
             return None
@@ -88,7 +97,7 @@ class HistoryUtil(object):
         else:
             raise falcon.HTTPNotFound(title="Device not found",
                                       description="No data for the given device could be found")
-    
+
     @staticmethod
     def check_type(arg):
         logger.debug(arg)
@@ -145,14 +154,16 @@ class DeviceHistory(object):
 
         ts_filter = {}
         if 'dateFrom' in request.params.keys():
-            ts_filter['$gte'] = dateutil.parser.parse(request.params['dateFrom'])
+            ts_filter['$gte'] = dateutil.parser.parse(
+                request.params['dateFrom'])
         if 'dateTo' in request.params.keys():
             ts_filter['$lte'] = dateutil.parser.parse(request.params['dateTo'])
         if len(ts_filter.keys()) > 0:
             query['ts'] = ts_filter
 
         ls_filter = {"_id": False, '@timestamp': False, '@version': False}
-        req = {'query': query, 'limit': limit_val, 'filter': ls_filter, 'sort': sort}
+        req = {'query': query, 'limit': limit_val,
+               'filter': ls_filter, 'sort': sort}
 
         logger.debug('DeviceHistory.parse_request [return]')
         logger.debug(req)
@@ -164,7 +175,8 @@ class DeviceHistory(object):
         """Requests infos of the device to device-manager then get all the attrs related to the device"""
         logger.debug('DeviceHistory.get_attrs [start]')
 
-        response = requests.get(conf.device_manager_url+'/device/'+device_id, headers={'Authorization': token})
+        response = requests.get(
+            conf.device_manager_url+'/device/'+device_id, headers={'Authorization': token})
         attrs_list = []
         json_data = json.loads(response.text)
 
@@ -195,12 +207,13 @@ class DeviceHistory(object):
         logger.debug(history)
 
         return history
-        
+
     @staticmethod
     def on_get(req, resp, device_id):
         logger.debug('DeviceHistory.on_get [start]')
 
-        collection = HistoryUtil.get_collection(req.context['related_service'], device_id)
+        collection = HistoryUtil.get_collection(
+            req.context['related_service'], device_id)
 
         if 'attr' in req.params.keys():
             if isinstance(req.params['attr'], list):
@@ -208,14 +221,16 @@ class DeviceHistory(object):
                 history = {}
                 for attr in req.params['attr']:
                     query = DeviceHistory.parse_request(req, attr)
-                    history[attr] = DeviceHistory.get_single_attr(collection, query)
+                    history[attr] = DeviceHistory.get_single_attr(
+                        collection, query)
             else:
                 logger.info('got single attr')
                 history = DeviceHistory.get_single_attr(
                     collection, DeviceHistory.parse_request(req, req.params['attr']))
                 if len(history) == 0:
                     msg = "No data for the given attribute could be found"
-                    raise falcon.HTTPNotFound(title="Attr not found", description=msg)
+                    raise falcon.HTTPNotFound(
+                        title="Attr not found", description=msg)
         else:
             logger.info('will return all the attrs')
             history = {}
@@ -223,7 +238,8 @@ class DeviceHistory(object):
             attrs_list = DeviceHistory.get_attrs(device_id, token)
             for attr in attrs_list:
                 query = DeviceHistory.parse_request(req, attr)
-                history[attr] = DeviceHistory.get_single_attr(collection, query)
+                history[attr] = DeviceHistory.get_single_attr(
+                    collection, query)
 
         logger.debug('DeviceHistory.on_get [return]')
         logger.debug(history)
@@ -241,12 +257,14 @@ class NotificationHistory(object):
         """
         logger.debug('NotificationHistory.on_get [start]')
 
-        collection = HistoryUtil.get_collection(req.context['related_service'], "notifications")
+        collection = HistoryUtil.get_collection(
+            req.context['related_service'], "notifications")
         history = {}
         logger.info("Will retrieve notifications")
         filter_query = req.params
-        query = NotificationHistory.get_query(filter_query)      
-        history['notifications'] = NotificationHistory.get_notifications(collection, query)
+        query = NotificationHistory.get_query(filter_query)
+        history['notifications'] = NotificationHistory.get_notifications(
+            collection, query)
 
         logger.debug('NotificationHistory.on_get [return]')
         logger.debug(history)
@@ -265,25 +283,28 @@ class NotificationHistory(object):
 
                 if field != "subject":
                     field = "metaAttrsFilter." + field
-                
-                value = HistoryUtil.model_value(value, HistoryUtil.check_type(value))
-                query[field] = value 
+
+                value = HistoryUtil.model_value(
+                    value, HistoryUtil.check_type(value))
+                query[field] = value
 
         sort = [('ts', pymongo.DESCENDING)]
         ls_filter = {"_id": False, '@timestamp': False, '@version': False}
 
-        result = {"query": query, "limit_val": 10, "sort": sort, "filter": ls_filter}
+        result = {"query": query, "limit_val": 10,
+                  "sort": sort, "filter": ls_filter}
 
         logger.debug('NotificationHistory.get_query [return]')
         logger.debug(result)
 
         return result
-    
+
     @staticmethod
     def get_notifications(collection, query):
         logger.debug('NotificationHistory.get_notifications [start]')
 
-        docs = collection.find(query['query'], query['filter'], limit=query['limit_val'], sort=query['sort'])
+        docs = collection.find(
+            query['query'], query['filter'], limit=query['limit_val'], sort=query['sort'])
 
         history = []
         for d in docs:
@@ -303,7 +324,8 @@ class STHHistory(object):
     def on_get(req, resp, device_type, device_id, attr):
         logger.debug('STHHistory.on_get [start]')
 
-        collection = HistoryUtil.get_collection(req.context['related_service'], device_id)
+        collection = HistoryUtil.get_collection(
+            req.context['related_service'], device_id)
 
         query = DeviceHistory.parse_request(req, attr)
         cursor = collection.find(query['query'],
@@ -368,4 +390,5 @@ class LoggingInterface(object):
             resp.body = json.dumps(response)
             resp.status = falcon.HTTP_200
         else:
-            raise falcon.HTTPInvalidParam('Logging level must be DEBUG, INFO, WARNING, ERROR or CRITICAL!', 'level')
+            raise falcon.HTTPInvalidParam(
+                'Logging level must be DEBUG, INFO, WARNING, ERROR or CRITICAL!', 'level')
