@@ -9,4 +9,3 @@ build/
 dist/
 .coverage
 htmlcov/
-.history
