@@ -270,7 +270,10 @@ class LoggingInterface(object):
 
 def str2_bool(v):
     """
-     this function basically only converts a string to boolean
+     This function converts a string to bool if this is the case.
+     If the value received is of type bool, it is just returned. 
+     If it is a string and has one of these values "yes", "true", "t", "1" 
+     regardless of whether it is uppercase or not, it will return a bool with a true value.
     """
     if type(v) is bool:
         return v
