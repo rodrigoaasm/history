@@ -284,14 +284,14 @@ def start_dojot_messenger(config, persister, dojot_persist_notifications_only):
 
     messenger = Messenger("Persister", config)
     messenger.init()
-    # Persister Only Notification
+
     messenger.create_channel("dojot.notifications", "r")
     messenger.on(config.dojot['subjects']['tenancy'],
                  "message", persister.handle_new_tenant)
+    LOGGER.info("Listen to tenancy events")
     messenger.on("dojot.notifications", "message",
                  persister.handle_notification)
     LOGGER.info('Listen to notification events')
-    LOGGER.info("Listen to tenancy events")
     
     if str2_bool(dojot_persist_notifications_only) != True:
 

@@ -5,7 +5,6 @@ import pymongo
 import unittest
 from unittest.mock import Mock, MagicMock, patch, call
 from history.subscriber.persister import Persister, LoggingInterface, Auth
-from dojot.module import Messenger, Config, Auth
 
 
 class TestPersister:
@@ -201,10 +200,8 @@ class TestLoggingInterface(unittest.TestCase):
 def test_persist_all_events(mock_messenger, mock_config, mock_create_indexes):
 
     from history.subscriber.persister import start_dojot_messenger
-    from history import conf
 
     p = Persister()
-    p.create_indexes_for_notifications('admin')
 
     mock_config.dojot = {
         "management": {
@@ -218,7 +215,6 @@ def test_persist_all_events(mock_messenger, mock_config, mock_create_indexes):
         }
     }
 
-    # test persist all boolean valued events
     start_dojot_messenger(mock_config, p, False)
 
     mock_messenger.assert_called_once_with("Persister", mock_config)
@@ -252,9 +248,8 @@ def test_persist_all_events(mock_messenger, mock_config, mock_create_indexes):
 def test_persist_only_notifications(mock_messenger, mock_config, create_indexes):
 
     from history.subscriber.persister import start_dojot_messenger
-    from history import conf
+
     p = Persister()
-    p.create_indexes_for_notifications('admin')
 
     mock_config.dojot = {
         "management": {
@@ -267,7 +262,6 @@ def test_persist_only_notifications(mock_messenger, mock_config, create_indexes)
             "device_data": "device-data"
         }
     }
-    # test persist only boolean valued notifications
 
     start_dojot_messenger(mock_config, p, True)
     mock_messenger.assert_called_once_with("Persister", mock_config)
