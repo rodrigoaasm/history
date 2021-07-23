@@ -36,8 +36,10 @@ dojot_subject_device_data = os.environ.get('DOJOT_SUBJECT_DEVICE_DATA', "device-
 
 # Global service to use when publishing dojot management events
 # such as new tenants
-dojot_service_management = os.environ.get("DOJOT_SERVICE_MANAGEMENT",
-                                          "dojot-management")
+dojot_service_management = os.environ.get("DOJOT_SERVICE_MANAGEMENT","dojot-management")
+
+dojot_persist_notifications_only = os.environ.get("DOJOT_PERSIST_NOTIFICATIONS_ONLY", False)
+
 
 #
 # Other dojot services

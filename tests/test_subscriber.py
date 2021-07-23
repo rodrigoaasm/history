@@ -1,3 +1,4 @@
+from dojot.module.config import Config
 import pytest
 import json
 import pymongo
@@ -193,19 +194,121 @@ class TestLoggingInterface(unittest.TestCase):
         self.assertTrue('invalid_param' in str(context.exception))
 
 
+@patch.object(Persister, 'create_indexes')
+@patch.object(Config, 'load_defaults')
+@patch('history.subscriber.persister.Messenger')
+def test_persist_all_events(mock_messenger, mock_config, mock_create_indexes):
+
+    from history.subscriber.persister import start_dojot_messenger
+
+    p = Persister()
+
+    mock_config.dojot = {
+        "management": {
+            "user": "dojot-management",
+            "tenant": "dojot-management"
+        },
+        "subjects": {
+            "tenancy": "dojot.tenancy",
+            "devices": "dojot.device-manager.device",
+            "device_data": "device-data"
+        }
+    }
+
+    start_dojot_messenger(mock_config, p, False)
+
+    mock_messenger.assert_called_once_with("Persister", mock_config)
+
+    mock_messenger().create_channel.assert_any_call("dojot.notifications", "r")
+
+    mock_messenger().on.assert_any_call(mock_config.dojot['subjects']['tenancy'],
+                                        "message", p.handle_new_tenant)
+
+    mock_messenger().on.assert_any_call("dojot.notifications", "message",
+                                        p.handle_notification)
+
+    mock_messenger().create_channel.assert_any_call(
+        mock_config.dojot['subjects']['devices'], "r")
+
+    mock_messenger().create_channel.assert_any_call(
+        mock_config.dojot['subjects']['device_data'], "r")
+
+    mock_messenger().on.assert_any_call(mock_config.dojot['subjects']['devices'],
+                                        "message", p.handle_event_devices)
+
+    mock_messenger().on.assert_any_call(mock_config.dojot['subjects']['device_data'],
+                                        "message", p.handle_event_data)
+    assert mock_messenger().create_channel.call_count == 3
+    assert mock_messenger().on.call_count == 4
+
+
+@patch.object(Persister, 'create_indexes')
+@patch.object(Config, 'load_defaults')
+@patch('history.subscriber.persister.Messenger')
+def test_persist_only_notifications(mock_messenger, mock_config, create_indexes):
+
+    from history.subscriber.persister import start_dojot_messenger
+
+    p = Persister()
+
+    mock_config.dojot = {
+        "management": {
+            "user": "dojot-management",
+            "tenant": "dojot-management"
+        },
+        "subjects": {
+            "tenancy": "dojot.tenancy",
+            "devices": "dojot.device-manager.device",
+            "device_data": "device-data"
+        }
+    }
+
+    start_dojot_messenger(mock_config, p, True)
+    mock_messenger.assert_called_once_with("Persister", mock_config)
+
+    mock_messenger().create_channel.assert_called_once_with("dojot.notifications", "r")
+    assert mock_messenger().create_channel.call_count == 1
+
+    mock_messenger().on.assert_any_call(
+        mock_config.dojot['subjects']['tenancy'], "message", p.handle_new_tenant)
+
+    mock_messenger().on.assert_any_call(
+        "dojot.notifications", "message", p.handle_notification)
+
+    assert mock_messenger().on.call_count == 2
+
+
+def test_str2_bool_return_true():
+    from history.subscriber.persister import str2_bool
+
+    assert True is str2_bool('true')
+    assert True is str2_bool('yes')
+    assert True is str2_bool('t')
+    assert True is str2_bool('1')
+
+
+def test_str2_bool_return_false():
+    from history.subscriber.persister import str2_bool
+
+    assert False is str2_bool('false')
+    assert False is str2_bool('no')
+    assert False is str2_bool('f')
+    assert False is str2_bool('0')
+
+
 @patch.object(Auth, 'get_tenants', return_value=None)
 @patch.object(Persister, 'init_mongodb')
 @patch.object(Persister, 'create_indexes_for_notifications')
-@patch('history.subscriber.persister.Messenger')
+@patch('history.subscriber.persister.start_dojot_messenger')
 @patch('history.subscriber.persister.falcon.API')
 @patch('history.subscriber.persister.simple_server')
-def test_persister_main(mock_simple_server, mock_falcon_api, mock_messenger, mock_create_indexes_for_notifications,
+def test_persister_main(mock_simple_server, mock_falcon_api, mock_start_dojot_messenger, mock_create_indexes_for_notifications,
                         mock_init_mongodb, mock_get_tenants):
     from history.subscriber.persister import main
     main()
     assert mock_init_mongodb.called
     assert mock_get_tenants.called
     assert mock_create_indexes_for_notifications.called
-    assert mock_messenger.called
+    assert mock_start_dojot_messenger.called
     assert mock_falcon_api.called
     assert mock_simple_server.make_server.called

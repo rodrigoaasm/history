@@ -71,7 +71,6 @@ HISTORY_DB_ADDRESS          |History database's address                         
 HISTORY_DB_PORT             |History database's port                                       |27017
 HISTORY_DB_REPLICA_SET      |History database's replica set address                        |None
 LOG_LEVEL                   | Sets the log level                                           | "INFO"
-
 ********************************************************************************
 
 ## **How to install History service**
@@ -198,6 +197,7 @@ DATA_BROKER_URL             |Data Broker address                                
 DEVICE_MANAGER_URL          |Device Manager address                                        |"http://device-manager:5000"
 LOG_LEVEL                   |Define minimum logging level                                  |"INFO"
 PERSISTER_PORT              |Port to be used by persister sevice's endpoints               |8057
+DOJOT_PERSIST_NOTIFICATIONS_ONLY                   |If 'True' only the notification events are persisted, otherwise if 'False' the notification and device events are persisted.                                         |False
 
 ##### Kafka related configuration
 
@@ -211,6 +211,7 @@ KAFKA_ADDRESS               |Kafta address                                      
 KAFKA_PORT                  |Kafka port                                                    |9092
 KAFKA_GROUP_ID              |Group ID used when creating consumers                         |"history"
 
+
 ##### MongoDB related configuration
 
 Environment variable        | Purpose                                                      | Default Value
@@ -220,7 +221,6 @@ HISTORY_DB_PORT             | History database's port                           
 HISTORY_DB_REPLICA_SET      | History database's replica set address                       | None
 HISTORY_DB_DATA_EXPIRATION  | Time (in seconds) that the data must be kept in the database | "604800" (7 days)
 MONGO_SHARD                 |Activate the use of sharding or not                           | False
-
 
 ********************************************************************************
 

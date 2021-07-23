@@ -268,6 +268,42 @@ class LoggingInterface(object):
                 'Logging level must be DEBUG, INFO, WARNING, ERROR or CRITICAL!', 'level')
 
 
+def str2_bool(v):
+    """
+     This function converts a string to bool if this is the case.
+     If the value received is of type bool, it is just returned. 
+     If it is a string and has one of these values "yes", "true", "t", "1" 
+     regardless of whether it is uppercase or not, it will return a bool with a true value.
+    """
+    if type(v) is bool:
+        return v
+    return v.lower() in ("yes", "true", "t", "1")
+
+
+def start_dojot_messenger(config, persister, dojot_persist_notifications_only):
+
+    messenger = Messenger("Persister", config)
+    messenger.init()
+
+    messenger.create_channel("dojot.notifications", "r")
+    messenger.on(config.dojot['subjects']['tenancy'],
+                 "message", persister.handle_new_tenant)
+    LOGGER.info("Listen to tenancy events")
+    messenger.on("dojot.notifications", "message",
+                 persister.handle_notification)
+    LOGGER.info('Listen to notification events')
+    
+    if str2_bool(dojot_persist_notifications_only) != True:
+
+        messenger.create_channel(config.dojot['subjects']['devices'], "r")
+        messenger.create_channel(config.dojot['subjects']['device_data'], "r")
+        messenger.on(config.dojot['subjects']['devices'],
+                     "message", persister.handle_event_devices)
+        messenger.on(config.dojot['subjects']['device_data'],
+                     "message", persister.handle_event_data)
+        LOGGER.info("Listen to devices events")
+
+
 def main():
     """
     Main, inits mongo, messenger, create channels read channels for device
@@ -281,20 +317,9 @@ def main():
     persister.create_indexes_for_notifications(auth.get_tenants())
     LOGGER.debug("... persister was successfully initialized.")
     LOGGER.debug("Initializing dojot messenger...")
-    messenger = Messenger("Persister", config)
-    messenger.init()
-    messenger.create_channel(config.dojot['subjects']['devices'], "r")
-    messenger.create_channel(config.dojot['subjects']['device_data'], "r")
-    # TODO: add notifications to config on dojot-module-python
-    messenger.create_channel("dojot.notifications", "r")
-    messenger.on(config.dojot['subjects']['devices'],
-                 "message", persister.handle_event_devices)
-    messenger.on(config.dojot['subjects']['device_data'],
-                 "message", persister.handle_event_data)
-    messenger.on(config.dojot['subjects']['tenancy'],
-                 "message", persister.handle_new_tenant)
-    messenger.on("dojot.notifications", "message",
-                 persister.handle_notification)
+
+    start_dojot_messenger(
+        config, persister, conf.dojot_persist_notifications_only)
     LOGGER.debug("... dojot messenger was successfully initialized.")
 
     # Create falcon app
