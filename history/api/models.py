@@ -260,7 +260,7 @@ class NotificationHistory(object):
 
         query = {}
         ts_filter = {}
-        limit_val = 10
+        limit_val = 0
         if filter_query:
             for field in filter_query.keys():
                 if field == "dateFrom":
@@ -277,8 +277,10 @@ class NotificationHistory(object):
                     
                     value = HistoryUtil.model_value(value, HistoryUtil.check_type(value))
                     query[field] = value
-            if ts_filter.keys():
-                query['ts'] = ts_filter
+        if ts_filter.keys():
+            query['ts'] = ts_filter
+        elif limit_val == 0:
+            limit_val = 10
 
         sort = [('ts', pymongo.DESCENDING)]
         ls_filter = {"_id": False, '@timestamp': False, '@version': False}
