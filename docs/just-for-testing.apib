@@ -73,6 +73,15 @@ If no query string is set, then all values from all attributes are returned.
               }
             ]
 
++ Response 200 (text/csv; charset=UTF-8)
+
+  + body
+    "attr","value","device_id","ts","metadata.protocol","metadata.payload"
+    "temperature",22.12,"b374a5","2018-02-14T13:43:33.306000Z","mqtt","json" 
+    "temperature",23.12,"b374a5","2018-02-14T13:42:33.306000Z","mqtt","json"
+    "temperature",24.10,"b374a5","2018-02-14T13:42:33.306000Z","mqtt","json"
+
+
 + Response 404 (application/json; charset=UTF-8)
 
   This does not mean that there is no such device in the dojot, just that there is no history for that device yet.
