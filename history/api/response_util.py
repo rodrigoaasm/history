@@ -20,7 +20,7 @@ def build_response_body(request, history, csv_parser= None):
         return json.dumps(history)
     elif request.client_accepts('text/csv'):
         history_parsed = csv_parser(history) if csv_parser else history
-        csv_buffer = io.StringIO();
+        csv_buffer = io.StringIO()
         history_normalized = pd.json_normalize(history_parsed)
         history_normalized.to_csv(csv_buffer, index=False, quotechar='"', encoding="utf-8", quoting=csv.QUOTE_NONNUMERIC)
         return csv_buffer.getvalue()

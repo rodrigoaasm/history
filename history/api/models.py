@@ -163,8 +163,8 @@ class DeviceHistory(object):
     @staticmethod
     def csv_response_parser(history):
         concatenated_history = []
-        for prop, list in history.items():
-            concatenated_history += list
+        for prop, list_messages in history.items():
+            concatenated_history += list_messages
         return concatenated_history
 
     @staticmethod
@@ -267,7 +267,7 @@ class NotificationHistory(object):
         logger.debug(history)
 
         resp.status = falcon.HTTP_200
-        resp.body = ResponseUtil.build_response_body(req, history['notifications'])
+        resp.body = ResponseUtil.build_response_body(req, history)
 
     @staticmethod
     def get_query(filter_query):
