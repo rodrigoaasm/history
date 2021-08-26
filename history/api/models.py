@@ -9,7 +9,8 @@ import dateutil.parser
 import falcon
 import pymongo
 import requests
-from history import conf, Logger
+from .. import conf, Logger
+from . import response_util as ResponseUtil 
 
 logger = Logger.Log(conf.log_level).color_log()
 
@@ -160,6 +161,13 @@ class DeviceHistory(object):
         return req
 
     @staticmethod
+    def csv_response_parser(history):
+        concatenated_history = []
+        for prop, list_messages in history.items():
+            concatenated_history += list_messages
+        return concatenated_history
+
+    @staticmethod
     def get_attrs(device_id, token):
         """Requests infos of the device to device-manager then get all the attrs related to the device"""
         logger.debug('DeviceHistory.get_attrs [start]')
@@ -199,9 +207,9 @@ class DeviceHistory(object):
     @staticmethod
     def on_get(req, resp, device_id):
         logger.debug('DeviceHistory.on_get [start]')
-
+        
+        ResponseUtil.validate_accept_header(req)            
         collection = HistoryUtil.get_collection(req.context['related_service'], device_id)
-
         if 'attr' in req.params.keys():
             if isinstance(req.params['attr'], list):
                 logger.info('got list of attrs')
@@ -209,6 +217,8 @@ class DeviceHistory(object):
                 for attr in req.params['attr']:
                     query = DeviceHistory.parse_request(req, attr)
                     history[attr] = DeviceHistory.get_single_attr(collection, query)
+                resp.body = ResponseUtil.build_response_body(req, history, DeviceHistory.csv_response_parser )
+                
             else:
                 logger.info('got single attr')
                 history = DeviceHistory.get_single_attr(
@@ -216,6 +226,9 @@ class DeviceHistory(object):
                 if len(history) == 0:
                     msg = "No data for the given attribute could be found"
                     raise falcon.HTTPNotFound(title="Attr not found", description=msg)
+                
+                resp.body =  ResponseUtil.build_response_body(req, history )
+                
         else:
             logger.info('will return all the attrs')
             history = {}
@@ -224,13 +237,14 @@ class DeviceHistory(object):
             for attr in attrs_list:
                 query = DeviceHistory.parse_request(req, attr)
                 history[attr] = DeviceHistory.get_single_attr(collection, query)
+            
+            resp.body = ResponseUtil.build_response_body(req, history, DeviceHistory.csv_response_parser )
 
         logger.debug('DeviceHistory.on_get [return]')
         logger.debug(history)
 
         resp.status = falcon.HTTP_200
-        resp.body = json.dumps(history)
-
+      
 
 class NotificationHistory(object):
 
@@ -240,6 +254,7 @@ class NotificationHistory(object):
         Handles get method
         """
         logger.debug('NotificationHistory.on_get [start]')
+        ResponseUtil.validate_accept_header(req)
 
         collection = HistoryUtil.get_collection(req.context['related_service'], "notifications")
         history = {}
@@ -252,7 +267,7 @@ class NotificationHistory(object):
         logger.debug(history)
 
         resp.status = falcon.HTTP_200
-        resp.body = json.dumps(history)
+        resp.body = ResponseUtil.build_response_body(req, history)
 
     @staticmethod
     def get_query(filter_query):

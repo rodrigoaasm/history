@@ -1,6 +1,6 @@
 FROM python:3.6-alpine as basis
 
-RUN apk update && apk --no-cache add build-base postgresql-dev libffi-dev git libc6-compat linux-headers bash dumb-init
+RUN apk update && apk --no-cache add build-base postgresql-dev libffi-dev git libc6-compat linux-headers bash dumb-init g++ libstdc++
 
 RUN pip install cython
 
@@ -12,10 +12,11 @@ ENV VIRTUAL_ENV="/usr/src/venv"
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 ADD . /usr/src/app
-RUN ["python", "setup.py", "develop"]
+RUN pip install -r ./requirements/requirements.txt
+#RUN ["python", "setup.py", "develop"]
 
 FROM python:3.6-alpine
-RUN apk add --no-cache tini
+RUN apk add --no-cache tini linux-headers bash dumb-init g++ libstdc++
 ENTRYPOINT ["/sbin/tini", "--"]
 
 COPY --from=basis /usr/src/venv /usr/src/venv

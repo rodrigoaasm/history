@@ -59,10 +59,10 @@ def setup(transaction):
 
     _notification = {
         "msgID": "12345",
-        "timestamp": 1551111524,
+        "timestamp": 1550693872863,        
         "metaAttrsFilter": {
-            "level": 1,
-            "shouldPersist": "True"
+            "level": 3,
+            "shouldPersist": True
         },
         "message": "Something went wrong.",
         "subject": "user_notification",
