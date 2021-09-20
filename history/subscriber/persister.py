@@ -10,6 +10,7 @@ from dojot.module import Messenger, Config, Auth
 from wsgiref import simple_server  # NOQA
 import os
 
+
 LOGGER = Logger.Log(conf.log_level).color_log()
 
 
@@ -47,7 +48,7 @@ class Persister:
         self.db[collection_name].create_index(
             [('attr', pymongo.DESCENDING), ('ts', pymongo.DESCENDING)])
         self.db[collection_name].create_index(
-            'ts', expireAfterSeconds=conf.db_expiration)
+            'ts', expireAfterSeconds=int(conf.db_expiration))
 
     def create_indexes_for_notifications(self, tenants):
         LOGGER.debug(f"Creating indexes for tenants: {tenants}")
