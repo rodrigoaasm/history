@@ -12,7 +12,6 @@ ENV VIRTUAL_ENV="/usr/src/venv"
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 ADD . /usr/src/app
-RUN pip install -r ./requirements/requirements.txt
 RUN ["python", "setup.py", "develop"]
 
 FROM python:3.6-alpine
