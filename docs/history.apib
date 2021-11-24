@@ -45,8 +45,8 @@ If no query string is set, then all values from all attributes are returned.
 
 + Request (application/json)
   + Headers
-
             Authorization: Bearer JWT
+            Accept: Application/json or text/csv
 
 + Response 200 (application/json; charset=UTF-8)
 
@@ -131,6 +131,7 @@ If no query string is set, then all values from all attributes are returned.
   + Headers
 
             Authorization: Bearer JWT
+            Accept: Application/json or text/csv
 
 + Response 200 (application/json; charset=UTF-8)
 
@@ -230,7 +231,7 @@ If no query string is set, then all values from all attributes are returned.
     "pressure",1013,"b374a5","2010-01-01T10:13:22.306000Z,"mqtt","json"
 
             
-+ Response 200 (application/json; charset=UTF-8)
++ Response 200 (text/csv; charset=UTF-8)
 
   If there is no data for the filter used.
 
@@ -262,6 +263,7 @@ and select only those needed by a particular application.
     + dateFrom:`2021-09-23T00:00:00Z` (optional, string) - Start time of a time-based query.
     + dateTo:`2021-09-24T18:00:00Z` (optional, string) - End time of a time-based query.
 
+
 ### Get notifications from a tenant [GET]
 + Request (application/json)
 
@@ -271,7 +273,8 @@ and select only those needed by a particular application.
 
 + Response 200 (application/json; charset=UTF-8)
 
-  + body
+    + body
+
             {
               "notifications":
                 [

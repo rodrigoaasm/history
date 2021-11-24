@@ -22,6 +22,7 @@ app.add_route('/STH/v1/contextEntities/type/{device_type}/id/{device_id}/attribu
 app.add_route('/log', LoggingInterface())
 logger.info('Preparing API routes..')
 
+
 # Useful for debugging problems in API, it works with pdb
 if __name__ == '__main__':
     from wsgiref import simple_server  # NOQA
