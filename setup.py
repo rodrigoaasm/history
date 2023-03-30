@@ -44,7 +44,7 @@ setuptools.setup(
 
     packages=setuptools.find_packages(),
     include_package_data=True,
-    install_requires=get_requirements('requirements/requirements.txt'),
+    install_requires=get_requirements('requirements/persister.txt'),
     setup_requires=('versiontools'),
 
     author='Matheus Magalhaes',

@@ -274,20 +274,33 @@ class NotificationHistory(object):
         logger.debug('NotificationHistory.get_query [start]')
 
         query = {}
+        ts_filter = {}
+        limit_val = 0
         if filter_query:
             for field in filter_query.keys():
-                value = filter_query[field]
+                if field == "dateFrom":
+                    ts_filter['$gte'] = dateutil.parser.parse(filter_query[field])
+                elif field == "dateTo":
+                    ts_filter['$lte'] = dateutil.parser.parse(filter_query[field])
+                elif field == "limit":
+                    limit_val = int(filter_query[field])
+                else:
+                    value = filter_query[field]
 
-                if field != "subject":
-                    field = "metaAttrsFilter." + field
-                
-                value = HistoryUtil.model_value(value, HistoryUtil.check_type(value))
-                query[field] = value 
+                    if field != "subject":
+                        field = "metaAttrsFilter." + field
+                    
+                    value = HistoryUtil.model_value(value, HistoryUtil.check_type(value))
+                    query[field] = value
+        if ts_filter.keys():
+            query['ts'] = ts_filter
+        elif limit_val == 0:
+            limit_val = 10
 
         sort = [('ts', pymongo.DESCENDING)]
         ls_filter = {"_id": False, '@timestamp': False, '@version': False}
 
-        result = {"query": query, "limit_val": 10, "sort": sort, "filter": ls_filter}
+        result = {"query": query, "limit_val": limit_val, "sort": sort, "filter": ls_filter}
 
         logger.debug('NotificationHistory.get_query [return]')
         logger.debug(result)
